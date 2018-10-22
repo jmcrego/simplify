@@ -20,10 +20,7 @@ class Attention(nn.Module):
     def __init__(self, hidden_size, method):
         super(Attention, self).__init__()
         self.method = method
-#        self.H = hidden_size
-
-        if method == 'dot':
-            pass #no need to use a layer
+        if method == 'dot': pass #no need to use a layer
         elif method == 'general':
             self.attn = nn.Linear(hidden_size, hidden_size)
         elif method == 'concat':
@@ -32,25 +29,21 @@ class Attention(nn.Module):
         else: sys.exit("error: bad attention method {} option. Use: dot OR general OR concat OR none\n".format(method))
 
     def forward(self, dec_hidden, enc_outputs):
-        #print("Attention forward")
-        #print("dec_hidden={}".format(dec_hidden.shape)) #[batch_size, H]
-        #print("enc_outputs={}".format(enc_outputs.shape)) #[seq_len, batch_size, H]
+        #print("dec_hidden={}".format(dec_hidden.shape)) #[B, H]
+        #print("enc_outputs={}".format(enc_outputs.shape)) #[S, B, H]
         S = enc_outputs.size(0)
         B = enc_outputs.size(1)
         # Create variable to store attention energies
-        attn_energies = Variable(torch.zeros(B, S)) # B x S
+        attn_energies = Variable(torch.zeros(B, S)) # [B, S]
         for b in range(B): #for all batches
             for j in range(S): # Calculate energy for each enc_output (referred to each source word)
                 attn_energies[b, j] = self.score(dec_hidden[b], enc_outputs[j, b])
-        #print("attn_energies={}".format(attn_energies.shape))
 
         # Normalize energies to weights in range 0 to 1
         attn_energies_norm = F.softmax(attn_energies, dim=1)
-        #print("attn_energies_norm={}".format(attn_energies_norm.shape)) #[B, S]
-        return attn_energies_norm
+        return attn_energies_norm #[B, S]
 
     def score(self, dec_hidden, enc_output):
-        #print("score")
         #print("dec_hidden={}".format(dec_hidden.shape)) #[1, H]
         #print("enc_output={}".format(enc_output.shape)) #[1, H]
         if self.method == 'dot':
@@ -61,7 +54,7 @@ class Attention(nn.Module):
         elif self.method == 'concat':
             energy = self.attn(torch.cat((dec_hidden, enc_output), 1))
             energy = self.v.dot(energy)
-        #print("energy={}".format(energy))
+        #print("energy={}".format(energy)) #value
         return energy
 
 
@@ -69,19 +62,19 @@ class DecoderRNN_Attn(nn.Module):
 
     def __init__(self, embedding, rnn_type, num_layers, bidirectional_encoder, hidden_size, dropout, attention_method, idx_ini, idx_end, idx_pad, idx_unk):
         super(DecoderRNN_Attn, self).__init__()
+        self.dropout = dropout
         ### embedding layer
         self.embedding = embedding # [voc_length x emb_size] contains nn.Embedding()
         self.V = self.embedding.num_embeddings #vocabulary size
         self.E = self.embedding.embedding_dim #embedding size
         self.L = num_layers
-        self.bidirectional_encoder = bidirectional_encoder
+        self.D = 2 if bidirectional_encoder else 1
         self.H = hidden_size
-        self.dropout = dropout
-        ### dropout layer
+        ### dropout layer to apply on top of the embedding layer
         self.dropout = nn.Dropout(self.dropout)
         ### set up the RNN
-        if rnn_type == "lstm": self.rnn = nn.LSTM(self.E+self.H, self.H, self.L, dropout=dropout) #StackedLSTM(num_layers, input_size, hidden_size, dropout)
-        elif rnn_type == "gru": self.rnn = nn.GRU(self.E+self.H, self.H, self.L, dropout=dropout) #StackedGRU(num_layers, input_size, hidden_size, dropout)
+        if rnn_type == "lstm": self.rnn = nn.LSTM(self.E+self.H, self.H, self.L, dropout=dropout) #input is embedding+hidden (to allow feed-input)
+        elif rnn_type == "gru": self.rnn = nn.GRU(self.E+self.H, self.H, self.L, dropout=dropout)
         else: sys.exit("error: bad -cell {} option. Use: lstm OR gru\n".format(rnn_type))
         ### Attention mechanism
         self.attn = Attention(self.H, attention_method)
@@ -95,17 +88,14 @@ class DecoderRNN_Attn(nn.Module):
         #tgt_batch is [B, S]
         self.B = tgt_batch.shape[0] #batch_size
         self.S = tgt_batch.shape[1] #seq_size
-        #print("B={}".format(B))
-        #print("S={}".format(S))
         tgt_batch = tgt_batch.transpose(1,0) #tgt_batch is [S, B]
-        #print("tgt_batch={}".format(tgt_batch.shape))
         ### these are the output vectors that will be filled at the end of the loop
-        dec_output_words = torch.zeros([self.S - 1, self.B], dtype=torch.int32)
-        dec_outputs = torch.zeros([self.S - 1, self.B, self.V], dtype=torch.float32)
+        dec_output_words = torch.zeros([self.S - 1, self.B], dtype=torch.int32) #[S-1, B]
+        dec_outputs = torch.zeros([self.S - 1, self.B, self.V], dtype=torch.float32) #[S-1, B, V]
         ###
         ### initialize dec_hidden (with dec_final) and attn_hidden (Eq 5 in Luong) used for input-feeding
         ###
-        dec_hidden = self.init_state(enc_final)
+        dec_hidden = self.init_state(enc_final) #[L, B, D*dim]
         #dec_hidden is [layers x batch x (num_directions*dim)] #dim is hidden_size/2
         #print("dec_hidden[0]={}".format(dec_hidden[0].shape)) ### len(dec_hidden)==num_layers
         #print("dec_hidden[1]={}".format(dec_hidden[1].shape)) ### len(dec_hidden)==num_layers
@@ -187,7 +177,7 @@ class DecoderRNN_Attn(nn.Module):
 
     def cat_directions(self, h):
         #if num_directions is 1 (not a bidirectional encoder) there is nothing to do
-        if not self.bidirectional_encoder: return h
+        if self.D == 1: return h
         #otherwise, h is:        
         #[(layers*num_directions) x batch_size x dim] 
         # and h should be:
