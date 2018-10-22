@@ -1,0 +1,13 @@
+### Network
+cuda: False
+cell: lstm
+num_layers: 2
+bidirectional: True
+hidden_units: 4
+emb_len: 5
+attention: dot
+coverage: False
+pointer: False
+### Training
+method: adam
+max_grad_norm: 2.0
