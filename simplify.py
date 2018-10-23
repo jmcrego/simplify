@@ -23,6 +23,7 @@ def main():
             voc = Vocab(par.voc)
             emb = Embed(par.emb, cfg, voc) #embeddings read from file OR randomly initialised (length of vectors must match with that given in config file)
             mod = Model(cfg, voc, emb, dropout=par.dropout)
+            if cfg.cuda: mod.cuda()
             opt = None
             sys.stderr.write('Learning [from scratch]...\n')
 

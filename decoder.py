@@ -17,15 +17,20 @@ import numpy as np
 
 class Attention(nn.Module):
 
-    def __init__(self, hidden_size, method):
+    def __init__(self, hidden_size, method, cuda):
         super(Attention, self).__init__()
         self.method = method
+        self.cuda = cuda
         if method == 'dot': pass #no need to use a layer
         elif method == 'general':
             self.attn = nn.Linear(hidden_size, hidden_size)
+            if self.cuda: self.attn.cuda()
         elif method == 'concat':
             self.attn = nn.Linear(hidden_size*2, hidden_size)
             self.v = nn.Parameter(torch.FloatTensor(1, hidden_size))
+            if self.cuda:
+                self.attn.cuda()
+                self.v.cuda()
         else: sys.exit("error: bad attention method {} option. Use: dot OR general OR concat OR none\n".format(method))
 
     def forward(self, dec_hidden, enc_outputs):
@@ -35,6 +40,7 @@ class Attention(nn.Module):
         B = enc_outputs.size(1)
         # Create variable to store attention energies
         attn_energies = Variable(torch.zeros(B, S)) # [B, S]
+        if self.cuda: attn_energies = attn_energies.cuda()
         for b in range(B): #for all batches
             for j in range(S): # Calculate energy for each enc_output (referred to each source word)
                 attn_energies[b, j] = self.energy(dec_hidden[b], enc_outputs[j, b])
@@ -60,8 +66,9 @@ class Attention(nn.Module):
 
 class DecoderRNN_Attn(nn.Module):
 
-    def __init__(self, embedding, rnn_type, num_layers, bidirectional_encoder, hidden_size, dropout, attention_method, idx_ini, idx_end, idx_pad, idx_unk):
+    def __init__(self, embedding, rnn_type, num_layers, bidirectional_encoder, hidden_size, dropout, attention_method, idx_ini, idx_end, idx_pad, idx_unk, cuda):
         super(DecoderRNN_Attn, self).__init__()
+        self.cuda = cuda
         self.dropout = dropout
         ### embedding layer
         self.embedding = embedding # [voc_length x emb_size] contains nn.Embedding()
@@ -77,7 +84,7 @@ class DecoderRNN_Attn(nn.Module):
         elif rnn_type == "gru": self.rnn = nn.GRU(self.E+self.H, self.H, self.L, dropout=dropout)
         else: sys.exit("error: bad -cell {} option. Use: lstm OR gru\n".format(rnn_type))
         ### Attention mechanism
-        self.attn = Attention(self.H, attention_method)
+        self.attn = Attention(self.H, attention_method, cuda)
         ### concat layer
         self.concat = nn.Linear(self.H*2, self.H) 
         ### output layer
@@ -92,10 +99,14 @@ class DecoderRNN_Attn(nn.Module):
         ### these are the output vectors that will be filled at the end of the loop
         dec_output_words = torch.zeros([self.S - 1, self.B], dtype=torch.int32) #[S-1, B]
         dec_outputs = torch.zeros([self.S - 1, self.B, self.V], dtype=torch.float32) #[S-1, B, V]
+        if self.cuda: 
+            dec_output_words = dec_output_words.cuda()
+            dec_outputs = dec_outputs.cuda()
         ### initialize dec_hidden (with dec_final)
         dec_hidden = self.init_state(enc_final) #[L, B, D*dim] #dim is H/2
         ### initialize attn_hidden (Eq 5 in Luong) used for input-feeding
         attn_hidden = Variable(torch.zeros(1, self.B, self.H)) #[1, B, H]
+        if self.cuda: attn_hidden = attn_hidden.cuda()
         for t in range(self.S-1): #loop to produce target words step by step
             ### decide which is the input word: consider teacher forcing
             if t==0: input_word = tgt_batch[t] ### it should be <ini>
@@ -160,10 +171,8 @@ class DecoderRNN_Attn(nn.Module):
 
     def init_state(self, encoder_hidden):
         if encoder_hidden is None: return None
-        if isinstance(encoder_hidden, tuple): ### lstm
-            encoder_hidden = tuple([self.cat_directions(h) for h in encoder_hidden])
-        else: ### gru
-            encoder_hidden = self.cat_directions(encoder_hidden)
+        if isinstance(encoder_hidden, tuple): encoder_hidden = tuple([self.cat_directions(h) for h in encoder_hidden]) ### lstm
+        else: encoder_hidden = self.cat_directions(encoder_hidden) ### gru
         return encoder_hidden
 
     def cat_directions(self, h):
