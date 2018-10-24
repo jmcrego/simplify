@@ -15,7 +15,7 @@ import numpy as np
 
 class DecoderRNN_Attn(nn.Module):
 
-    def __init__(self, embedding, cfg, dropout, idx_ini, idx_end, idx_pad, idx_unk): #rnn_type, num_layers, bidirectional_encoder, hidden_size, dropout, attention_method, idx_ini, idx_end, idx_pad, idx_unk, cuda):
+    def __init__(self, embedding, cfg):
         super(DecoderRNN_Attn, self).__init__()
         ### embedding layer
         self.embedding = embedding # [voc_length x emb_size] contains nn.Embedding()
@@ -26,10 +26,10 @@ class DecoderRNN_Attn(nn.Module):
         self.H = cfg.hidden_size
         self.cuda = cfg.cuda
         ### dropout layer to apply on top of the embedding layer
-        self.dropout = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(cfg.par.dropout)
         ### set up the RNN
-        if cfg.cell == "lstm": self.rnn = nn.LSTM(self.E+self.H, self.H, self.L, dropout=dropout) #input is embedding+hidden (to allow feed-input)
-        elif cfg.cell == "gru": self.rnn = nn.GRU(self.E+self.H, self.H, self.L, dropout=dropout)
+        if cfg.cell == "lstm": self.rnn = nn.LSTM(self.E+self.H, self.H, self.L, dropout=cfg.par.dropout) #input is embedding+hidden (to allow feed-input)
+        elif cfg.cell == "gru": self.rnn = nn.GRU(self.E+self.H, self.H, self.L, dropout=cfg.par.dropout)
         else: sys.exit("error: bad -cell {} option. Use: lstm OR gru\n".format(cfg.cell))
         ### Attention mechanism
         self.attn = Attention(self.H, cfg.attention, cfg.cuda)

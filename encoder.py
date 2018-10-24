@@ -15,7 +15,7 @@ import numpy as np
 
 class EncoderRNN(nn.Module):
 
-    def __init__(self, embeddings, cfg, dropout): #rnn_type, num_layers, bidirectional, hidden_size, dropout):
+    def __init__(self, embeddings, cfg): #rnn_type, num_layers, bidirectional, hidden_size, dropout):
         super(EncoderRNN, self).__init__()
         num_of_states = 2 if cfg.cell == "lstm" else 1
         num_directions = 2 if cfg.bidirectional else 1
@@ -26,8 +26,8 @@ class EncoderRNN(nn.Module):
         self.hidden_size = cfg.hidden_size // num_directions
         self.input_size = self.embeddings.embedding_dim #embedding dimension
         ### rnn cell
-        if cfg.cell == "lstm": self.rnn = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers, dropout=dropout, batch_first=True, bidirectional=(num_directions==2))
-        elif cfg.cell == "gru": self.rnn = nn.GRU(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers, dropout=dropout, batch_first=True, bidirectional=(num_directions==2))
+        if cfg.cell == "lstm": self.rnn = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers, dropout=cfg.par.dropout, batch_first=True, bidirectional=(num_directions==2))
+        elif cfg.cell == "gru": self.rnn = nn.GRU(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers, dropout=cfg.par.dropout, batch_first=True, bidirectional=(num_directions==2))
         else: sys.exit("error: bad -cell {} option. Use: lstm OR gru\n".format(cfg.cell))
         ### bridge (not used)
         #self.total_hidden_dim = hidden_size * num_layers

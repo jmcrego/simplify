@@ -35,7 +35,7 @@ class Vocab():
         self.tok_to_idx[str_ini] = len(self.tok_to_idx) #2
         self.idx_to_tok.append(str_end)
         self.tok_to_idx[str_end] = len(self.tok_to_idx) #3
-        self.length = 4
+        self.size = 4
 
         self.idx_unk = idx_unk
         self.idx_pad = idx_pad
@@ -49,9 +49,9 @@ class Vocab():
                 if line not in self.tok_to_idx:
                     self.idx_to_tok.append(line)
                     self.tok_to_idx[line] = len(self.tok_to_idx)
-                    self.length += 1
-        #self.length = len(self.idx_to_tok)
-        sys.stderr.write('Read vocab ({} entries)\n'.format(self.length))
+                    self.size += 1
+        #self.size = len(self.idx_to_tok)
+        sys.stderr.write('Read vocab ({} entries)\n'.format(self.size))
 
     def __iter__(self):
         for tok in self.idx_to_tok:
@@ -62,7 +62,7 @@ class Vocab():
 
     def get(self,s):
         if type(s) == int: ### I want the string
-            if s < self.length: return self.idx_to_tok[s]
+            if s < self.size: return self.idx_to_tok[s]
             else:
                 sys.exit('error: key \'{}\' not found in vocab\n'.format(s))
         ### I want the index

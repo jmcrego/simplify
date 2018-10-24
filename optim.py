@@ -11,12 +11,12 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 class Optimizer(object):
 
-    def __init__(self, method, max_grad_norm, lr, decay, mod):
-        self.max_grad_norm = max_grad_norm
-        if method == "adam":  self.optimizer = torch.optim.Adam(mod.parameters(), lr=lr)
-        elif method == "sgd": self.optimizer = torch.optim.SGD(mod.parameters(), lr=lr)
-        else: sys.exit("error: bad -method {} option. Use: adam OR sgd\n".format(method))
-        self.scheduler = ReduceLROnPlateau(self.optimizer, factor=decay, verbose=True)
+    def __init__(self, cfg, mod):
+        self.max_grad_norm = cfg.max_grad_norm
+        if cfg.method == "adam":  self.optimizer = torch.optim.Adam(mod.parameters(), lr=cfg.par.lr)
+        elif cfg.method == "sgd": self.optimizer = torch.optim.SGD(mod.parameters(), lr=cfg.par.lr)
+        else: sys.exit("error: bad -method {} option. Use: adam OR sgd\n".format(cfg.method))
+        self.scheduler = ReduceLROnPlateau(self.optimizer, factor=cfg.par.decay, verbose=True)
 
     def step(self):
         # Performs a single optimization step, including gradient norm clipping if necessary

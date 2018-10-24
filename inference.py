@@ -10,7 +10,7 @@ import time
 
 class Inference(): 
 
-    def __init__(self, mod, tst):
+    def __init__(self, cfg, mod, tst):
         ini_time = time.time()
         for val_iter, (src_batch, tgt_batch, target_batch, raw_src_batch, raw_tgt_batch, len_src_batch, len_tgt_batch) in enumerate(tst.minibatches()):
             _, predict_batch = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward

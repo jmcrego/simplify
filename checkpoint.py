@@ -11,11 +11,11 @@ class Checkpoint(object):
         self.path = path
         self.contains_model = self.contains_model()
 
-    def save(self, cfg, mod, opt, voc, loss):
+    def save(self, cfg, mod, opt, loss):
         if not os.path.exists(self.path): os.makedirs(self.path)
         date_time = time.strftime('%Y-%m-%d_%H:%M:%S', time.localtime())
         checkpoint = os.path.join(self.path, 'checkpoint_{}_{}_{:.4f}.pt'.format(date_time,mod.niters,loss)) 
-        chk = {'mod': mod.state_dict(), 'opt': opt.state_dict(), 'voc': voc, 'cfg': cfg}
+        chk = {'mod': mod.state_dict(), 'opt': opt.state_dict(), 'cfg': cfg}
         torch.save(chk, checkpoint) 
         sys.stderr.write("Saved checkpoint [{}]\n".format(checkpoint))
 
@@ -28,10 +28,9 @@ class Checkpoint(object):
         else: checkpoint = os.path.join(self.path, name)
         chk = torch.load(checkpoint) 
         cfg = chk['cfg'] 
-        voc = chk['voc'] 
-#        mod = Model(cfg, voc, emb, dropout=par.dropout)
+        mod = Model(cfg)
         mod.load_state_dict(chk['mod'])
-#        opt = Optimizer(cfg.method, cfg.max_grad_norm, par.lr, par.decay, mod)
+        opt = Optimizer(cfg)
         opt.load_state_dict(chk['opt'])
 
         sys.stderr.write("Loaded It={} {}".format(mod.niters,checkpoint)) 

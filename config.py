@@ -2,7 +2,6 @@
 
 import yaml
 import sys
-import torch
 
 class Config():
 
@@ -18,6 +17,8 @@ class Config():
         self.pointer = None
         self.method = None         
         self.max_grad_norm = None
+        self.voc_size = None
+        self.par = None
 
         with open(file, 'r') as stream: opts = yaml.load(stream)
         for o,v in opts.items():
@@ -34,11 +35,19 @@ class Config():
             elif o=="max_grad_norm": self.max_grad_norm = float(v)
             else: sys.exit("error: unparsed {} config option.".format(o))
 
-        ### print all options
-        self.print_options()
+    def add(self, par, voc=None):
+        self.par = par
+        if voc is not None: self.voc = voc
+        self.print()
 
-    def print_options(self):
-        sys.stderr.write("CONFIG: "+', '.join(['{0}: {1}'.format(k, v) for k,v in sorted(vars(self).items())])+"\n")
+    def print(self):
+        sys.stderr.write("CFG:")
+        for k, v in sorted(vars(self).items()): 
+            if (k!='par' and k!='voc'): sys.stderr.write(" {}: {}".format(k,v))
+        sys.stderr.write("\n")
+        self.par.print()
+        sys.stderr.write("VOC: size: {}\n".format(self.voc.size))
+
 
 
 class Params():
@@ -46,17 +55,17 @@ class Params():
     def __init__(self, argv):
 
         usage = """usage: {}
-*          -dir        PATH : model checkpoints saved/restored in PATH
-*          -cfg        FILE : topology config FILE (when training from scratch)
            -batch_size  INT : batch size [32]
            -seed        INT : seed for randomness [12345]
            -h               : this message           
         TRAINING:
+*          -dir        PATH : model checkpoints saved/restored in PATH
 *          -trn        FILE : run training over FILE
+*          -val        FILE : run validation over FILE
++          -cfg        FILE : topology config FILE (needed when training from scratch)
++          -voc        FILE : vocabulary FILE (needed when training from scratch)
            -max_src_len INT : maximum length of source sentences [400]
            -max_tgt_len INT : maximum length of source sentences [50]
-*          -val        FILE : run validation over FILE
-*          -voc        FILE : vocabulary FILE (when training from scratch)
            -emb        FILE : embeddings FILE (when training from scratch and if used)
            -n_iters     INT : number of iterations to run [10000]
            -dropout   FLOAT : dropout probability used on all layers [0.3]
@@ -65,7 +74,7 @@ class Params():
            -print_every INT : print information every INT iterations [1000]
            -valid_every INT : validate and save every INT iterations [10000]
         INFERENCE:
-           -mod        FILE : name of model in dir to load when testing (or used the last one)
+*          -chk        FILE : checkpoint file to load when testing (or used the last one)
 *          -tst        FILE : run inference over FILE
            -beam_size   INT : size of beam when decoding [5]""".format(argv.pop(0))
 
@@ -85,7 +94,7 @@ class Params():
         self.trn = None
         self.val = None
         self.tst = None
-        self.mod = None
+        self.chk = None
         self.voc = None
         self.emb = None
         while len(argv):
@@ -100,7 +109,7 @@ class Params():
             elif (tok=="-lr"          and len(argv)): self.lr = float(argv.pop(0))
             elif (tok=="-decay"       and len(argv)): self.decay = float(argv.pop(0))
             elif (tok=="-tst"         and len(argv)): self.tst = argv.pop(0)
-            elif (tok=="-mod"         and len(argv)): self.mod = argv.pop(0)
+            elif (tok=="-chk"         and len(argv)): self.chd = argv.pop(0)
             elif (tok=="-voc"         and len(argv)): self.voc = argv.pop(0)
             elif (tok=="-emb"         and len(argv)): self.emb = argv.pop(0)
             elif (tok=="-beam_size"   and len(argv)): self.beam_size = int(argv.pop(0))
@@ -111,14 +120,11 @@ class Params():
             else: sys.exit('error: unparsed {} option\n{}'.format(tok,usage))
 
         ### Checking some options
-        if not self.dir: sys.stderr.write('error: missing -dir option\n{}'.format(usage))
         if not self.trn and not self.tst: sys.stderr.write('error: missing -trn or -tst options\n{}'.format(usage))
+        if self.trn and not self.dir: sys.stderr.write('error: missing -dir option\n{}'.format(usage))
         if self.trn and not self.val: sys.stderr.write('error: missing -val option\n{}'.format(usage))
+        if self.tst and not self.chk: sys.stderr.write('error: missing -chk option\n{}'.format(usage))
 
-        torch.manual_seed(self.seed)
-        ### print all options
-        self.print_options()
-
-    def print_options(self):
-        sys.stderr.write("PARAMS: "+', '.join(['{0}: {1}'.format(k, v) for k,v in sorted(vars(self).items())])+"\n")
+    def print(self):
+        sys.stderr.write("PAR: "+', '.join(['{0}: {1}'.format(k, v) for k,v in sorted(vars(self).items())])+"\n")
 
