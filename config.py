@@ -19,6 +19,7 @@ class Config():
         self.max_grad_norm = None
         self.voc_size = None
         self.par = None
+        self.voc = None
         self.n_iters_sofar = None
 
         with open(file, 'r') as stream: opts = yaml.load(stream)
@@ -39,14 +40,14 @@ class Config():
     def add(self, par, voc=None):
         self.par = par
         if voc is not None: self.voc = voc
-        self.print()
+        self.out()
 
-    def print(self):
+    def out(self):
         sys.stderr.write("CFG:")
         for k, v in sorted(vars(self).items()): 
             if (k!='par' and k!='voc'): sys.stderr.write(" {}: {}".format(k,v))
         sys.stderr.write("\n")
-        self.par.print()
+        self.par.out()
         sys.stderr.write("VOC: size: {}\n".format(self.voc.size))
 
 
@@ -126,6 +127,6 @@ class Params():
         if self.trn and not self.val: sys.stderr.write('error: missing -val option\n{}'.format(usage))
         if self.tst and not self.chk: sys.stderr.write('error: missing -chk option\n{}'.format(usage))
 
-    def print(self):
+    def out(self):
         sys.stderr.write("PAR: "+', '.join(['{0}: {1}'.format(k, v) for k,v in sorted(vars(self).items())])+"\n")
 
