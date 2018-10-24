@@ -15,20 +15,20 @@ import numpy as np
 
 class EncoderRNN(nn.Module):
 
-    def __init__(self, embeddings, rnn_type, num_layers, bidirectional, hidden_size, dropout):
+    def __init__(self, embeddings, cfg, dropout): #rnn_type, num_layers, bidirectional, hidden_size, dropout):
         super(EncoderRNN, self).__init__()
-        num_of_states = 2 if rnn_type == "lstm" else 1
-        num_directions = 2 if bidirectional else 1
+        num_of_states = 2 if cfg.cell == "lstm" else 1
+        num_directions = 2 if cfg.bidirectional else 1
         ### if bidirectional the number of hidden_size (units) is divided by 2 for each direction
-        if hidden_size % num_directions != 0: sys.exit('error: hidden units {} must be an even number'.format(hidden_size)) 
-        self.num_layers = num_layers
-        self.hidden_size = hidden_size // num_directions
+        if cfg.hidden_size % num_directions != 0: sys.exit('error: hidden units {} must be an even number'.format(cfg.hidden_size)) 
         self.embeddings = embeddings # [voc_length x input_size]
+        self.num_layers = cfg.num_layers
+        self.hidden_size = cfg.hidden_size // num_directions
         self.input_size = self.embeddings.embedding_dim #embedding dimension
         ### rnn cell
-        if rnn_type == "lstm": self.rnn = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers, dropout=dropout, batch_first=True, bidirectional=bidirectional)
-        elif rnn_type == "gru": self.rnn = nn.GRU(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers, dropout=dropout, batch_first=True, bidirectional=bidirectional)
-        else: sys.exit("error: bad -cell {} option. Use: lstm OR gru\n".format(rnn_type))
+        if cfg.cell == "lstm": self.rnn = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers, dropout=dropout, batch_first=True, bidirectional=(num_directions==2))
+        elif cfg.cell == "gru": self.rnn = nn.GRU(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers, dropout=dropout, batch_first=True, bidirectional=(num_directions==2))
+        else: sys.exit("error: bad -cell {} option. Use: lstm OR gru\n".format(cfg.cell))
         ### bridge (not used)
         #self.total_hidden_dim = hidden_size * num_layers
         #self.bridgelayers = nn.ModuleList([nn.Linear(self.total_hidden_dim, self.total_hidden_dim, bias=True) for _ in range(num_of_states)]) ### there will be 1:GRU or 2:LSTM Linear layers

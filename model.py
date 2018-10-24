@@ -25,8 +25,8 @@ class Model(nn.Module):
         self.embeddings = nn.Embedding(emb.matrix.shape[0], emb.matrix.shape[1]) ### input embeddings into a Model variable
         self.embeddings.weight.data.copy_(torch.from_numpy(emb.matrix))
         ### model
-        self.encoder = EncoderRNN(self.embeddings, self.cfg.cell, self.cfg.num_layers, self.cfg.bidirectional, self.cfg.hidden_size, dropout)
-        self.decoder = DecoderRNN_Attn(self.embeddings, self.cfg.cell, self.cfg.num_layers, self.cfg.bidirectional, self.cfg.hidden_size, dropout, self.cfg.attention, voc.idx_ini, voc.idx_end, voc.idx_pad, voc.idx_unk, cfg.cuda)
+        self.encoder = EncoderRNN(self.embeddings, self.cfg, dropout)
+        self.decoder = DecoderRNN_Attn(self.embeddings, self.cfg, dropout, voc.idx_ini, voc.idx_end, voc.idx_pad, voc.idx_unk)
 
 #        sys.stderr.write('Initializing pars\n')
 #        for param in self.encoder.parameters(): param.data.uniform_(-0.08, 0.08) #do not initialize the embeddings

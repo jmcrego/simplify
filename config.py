@@ -2,6 +2,7 @@
 
 import yaml
 import sys
+import torch
 
 class Config():
 
@@ -12,7 +13,7 @@ class Config():
         self.bidirectional = None
         self.hidden_size = None
         self.emb_size = None
-        self.attention = 'none'
+        self.attention = 'dot'
         self.coverage = None
         self.pointer = None
         self.method = None         
@@ -114,6 +115,7 @@ class Params():
         if not self.trn and not self.tst: sys.stderr.write('error: missing -trn or -tst options\n{}'.format(usage))
         if self.trn and not self.val: sys.stderr.write('error: missing -val option\n{}'.format(usage))
 
+        torch.manual_seed(self.seed)
         ### print all options
         self.print_options()
 

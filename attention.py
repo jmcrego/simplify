@@ -24,7 +24,7 @@ class Attention(nn.Module):
             if self.cuda:
                 self.attn.cuda()
                 self.v.cuda()
-        else: sys.exit("error: bad attention method {} option. Use: dot OR general OR concat OR none\n".format(method))
+        else: sys.exit("error: bad attention method {} option. Use: dot OR general OR concat\n".format(method))
 
     def forward(self, dec_hidden, enc_outputs):
         #print("dec_hidden={}".format(dec_hidden.shape)) #[B, H]
