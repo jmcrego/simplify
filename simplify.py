@@ -18,14 +18,16 @@ def main():
 
     if par.trn and par.val:
         chk = Checkpoint(par.dir)
+
         if chk.contains_model: ####### resume training ####################
-            cfg, mod, opt = chk.load() ### already in GPU if needed
+            cfg, mod, opt = chk.load() ### also moves to GPU if cfg.cuda
             cfg.update_par(par) ### updates par in cfg
             sys.stderr.write('Learning [resume It={}]...\n'.format(cfg.n_iters_sofar))
+
         else: ######## training from scratch ##############################
             cfg = Config(par) ### reads cfg and par (reads vocabularies)
             mod = Model(cfg)
-            if cfg.cuda: mod.cuda() ### move to GPU
+            if cfg.cuda: mod.cuda() ### moves to GPU
             opt = Optimizer(cfg, mod) #build Optimizer
             sys.stderr.write('Learning [from scratch]...\n')
 
@@ -33,7 +35,7 @@ def main():
         val = Dataset(par.val, cfg.svoc, cfg.tvoc, par.batch_size, par.max_src_len, par.max_tgt_len, do_shuffle=True, do_filter=True)
         Training(cfg, mod, opt, trn, val, chk)
 
-    elif par.tst:
+    elif par.tst: ######## inference ######################################
         chk = Checkpoint()
         cfg, mod, opt = chk.load(par.chk)
         cfg.update_par(par) ### updates cfg options with pars

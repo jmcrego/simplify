@@ -16,8 +16,9 @@ class Checkpoint(object):
 
     def save(self, cfg, mod, opt, loss):
         if not os.path.exists(self.path): os.makedirs(self.path)
-        date_time = time.strftime('%Y-%m-%d_%H:%M:%S', time.localtime())
-        checkpoint = os.path.join(self.path, 'checkpoint_{}_{}_{:.4f}.pt'.format(date_time,cfg.n_iters_sofar,loss)) 
+#        date_time = time.strftime('%Y-%m-%d-%H:%M:%S', time.localtime())
+        date_time = time.strftime('%Y%m%d_%H%M%S', time.localtime())
+        checkpoint = os.path.join(self.path, 'checkpoint_{}_{:0>6}_{:.4f}.pt'.format(date_time,cfg.n_iters_sofar,loss)) 
         chk = {'mod': mod.state_dict(), 'opt': opt.state_dict(), 'cfg': cfg}
         torch.save(chk, checkpoint) 
         sys.stderr.write("Saved checkpoint [{}]\n".format(checkpoint))

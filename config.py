@@ -41,6 +41,7 @@ class Config():
             elif o=="max_grad_norm": self.max_grad_norm = float(v)
             else: sys.exit("error: unparsed {} config option.".format(o))
 
+        if pars.voc_src is None: sys.exit('error: missing -voc_src option\n')
         self.svoc = Vocab(par.voc_src)
         if self.reuse_words:
             self.tvoc = self.svoc
