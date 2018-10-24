@@ -48,6 +48,7 @@ class Params():
 *          -dir        PATH : model checkpoints saved/restored in PATH
 *          -cfg        FILE : topology config FILE (when training from scratch)
            -batch_size  INT : batch size [32]
+           -seed        INT : seed for randomness [12345]
            -h               : this message           
         TRAINING:
 *          -trn        FILE : run training over FILE
@@ -77,6 +78,7 @@ class Params():
         self.decay = 0.05
         self.print_every = 1
         self.valid_every = 10
+        self.seed = 12345
         self.cfg = None
         self.dir = None
         self.trn = None
@@ -103,6 +105,7 @@ class Params():
             elif (tok=="-beam_size"   and len(argv)): self.beam_size = int(argv.pop(0))
             elif (tok=="-print_every" and len(argv)): self.print_every = int(argv.pop(0))
             elif (tok=="-valid_every" and len(argv)): self.valid_every = int(argv.pop(0))
+            elif (tok=="-seed"        and len(argv)): self.seed = int(argv.pop(0))
             elif (tok=="-h"): sys.exit("{}".format(usage))
             else: sys.exit('error: unparsed {} option\n{}'.format(tok,usage))
 
