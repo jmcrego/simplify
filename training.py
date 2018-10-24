@@ -13,18 +13,17 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 class Training():
 
     def __init__(self, mod, trn, val, opt, voc, cfg, par, chk):
+        if opt is None: opt = Optimizer(cfg.method, cfg.max_grad_norm, par.lr, par.decay, mod) #build Optimizer
         ini_time = time.time()
+        ###############################
+        # loop over training batchs ###
+        ###############################
         curr_time = time.strftime("[%Y-%m-%d_%X]", time.localtime())    
-        if opt is None: 
-            opt = Optimizer(cfg.method, cfg.max_grad_norm, par.lr, par.decay, mod)
-            #if cfg.cuda: opt.cuda()
-
+        sys.stdout.write('{} Start TRAIN\n'.format(curr_time))
         lr = par.lr
-        # loop over training batchs
         trn_loss_total = 0  # Reset every print_every
         trn_iter = 0
         for (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch, len_tgt_batch) in trn.minibatches():
-            batch_size = src_batch.size(0)
             if cfg.cuda:
                 src_batch = src_batch.cuda()
                 tgt_batch = tgt_batch.cuda()
@@ -48,7 +47,8 @@ class Training():
             ############################
             if trn_iter % par.valid_every == 0:
                 val_loss_total = 0
-                for val_iter, (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch, len_tgt_batch) in enumerate(val.minibatches()):
+                val_iter = 0
+                for (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch, len_tgt_batch) in val.minibatches():
                     if cfg.cuda:
                         src_batch = src_batch.cuda()
                         tgt_batch = tgt_batch.cuda()
@@ -56,12 +56,15 @@ class Training():
                     dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward
                     loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, voc.length), ref_batch.contiguous().view(-1), ignore_index=voc.idx_pad)
                     val_loss_total += loss.item()
+                    val_iter += 1
                 #update learning rate
                 lr = opt.update_lr(val_loss_total)
                 curr_time = time.strftime("[%Y-%m-%d_%X]", time.localtime())
                 sys.stdout.write('{} VALID overall_iters:{} loss={:.4f}\n'.format(curr_time,mod.niters,val_loss_total/val_iter))
                 chk.save(cfg, mod, opt, voc, val_loss_total/val_iter)
-
+            ############################
+            # end if reached n_iters ###
+            ############################
             if trn_iter >= par.n_iters: break
 
         curr_time = time.strftime("[%Y-%m-%d_%X]", time.localtime())
