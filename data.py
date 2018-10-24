@@ -115,13 +115,14 @@ class Embed():
 
 class Dataset():
 
-    def __init__(self, file, voc, batch_size, max_src_len, max_tgt_len, do_shuffle, do_filter):
+    def __init__(self, file, svoc, tvoc, batch_size, max_src_len, max_tgt_len, do_shuffle, do_filter):
         if file is None: return
         self.file = file
         self.batch_size = batch_size
         self.max_src_len = max_src_len
         self.max_tgt_len = max_tgt_len
-        self.voc = voc
+        self.svoc = svoc
+        self.tvoc = tvoc
         self.do_shuffle = do_shuffle
         self.do_filter = do_filter ### in case of test no filtering is performed
         self.data = []
@@ -161,13 +162,13 @@ class Dataset():
             ### src tokens
             isrc = []
             for s in src: 
-                isrc.append(self.voc.get(s))
+                isrc.append(self.svoc.get(s))
                 if isrc[-1]==idx_unk: self.nunk_src += 1
                 self.nsrc += 1
             ### tgt tokens
             itgt = []
             for t in tgt: 
-                itgt.append(self.voc.get(t))
+                itgt.append(self.tvoc.get(t))
                 if itgt[-1]==idx_unk: self.nunk_tgt += 1
                 self.ntgt += 1
             yield isrc, itgt, src, tgt ### return for iterator

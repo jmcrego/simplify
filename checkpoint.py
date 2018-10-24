@@ -9,9 +9,10 @@ from optim import Optimizer
 
 class Checkpoint(object):
 
-    def __init__(self, path):
-        self.path = path
-        self.contains_model = self.contains_model()
+    def __init__(self, path=None):
+        if path is not None:
+            self.path = path
+            self.contains_model = self.contains_model()
 
     def save(self, cfg, mod, opt, loss):
         if not os.path.exists(self.path): os.makedirs(self.path)
@@ -22,12 +23,14 @@ class Checkpoint(object):
         sys.stderr.write("Saved checkpoint [{}]\n".format(checkpoint))
 
     def load(self, name=None):
-        if not os.path.exists(self.path): sys.exit('error: no experiments found in dir='.format(self.path))
         if name is None:
+            if not os.path.exists(self.path): sys.exit('error: no experiments found in {}'.format(self.path))
             all_saves = sorted(glob.glob(self.path+'/checkpoint_*.pt'), reverse=True)
             if len(all_saves)==0: sys.exit('error: no checkpoint found in dir={}'.format(self.path))
             checkpoint = all_saves[0]
-        else: checkpoint = os.path.join(self.path, name)
+        else: 
+            if not os.path.exists(name): sys.exit('error: no checkpoint found in {}'.format(name))
+            checkpoint = name
         chk = torch.load(checkpoint) 
         ### load cfg
         cfg = chk['cfg'] 

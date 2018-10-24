@@ -32,7 +32,7 @@ class Training():
             # learn on trainset ###
             #######################
             dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) # forward
-            loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.voc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.voc.idx_pad) # Get loss
+            loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad) # Get loss
             trn_loss_total += loss.item()
             mod.zero_grad() # reset gradients
             loss.backward() # Backward propagation
@@ -47,7 +47,6 @@ class Training():
             ############################
             if trn_iter % cfg.par.valid_every == 0:
                 curr_time = time.strftime("[%Y-%m-%d_%X]", time.localtime())
-                sys.stdout.write('{} Start VALID\n'.format(curr_time))
                 val_loss_total = 0
                 val_iter = 0
                 for (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch, len_tgt_batch) in val.minibatches():
@@ -56,7 +55,7 @@ class Training():
                         tgt_batch = tgt_batch.cuda()
                         ref_batch = ref_batch.cuda()
                     dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward
-                    loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.voc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.voc.idx_pad)
+                    loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad)
                     val_loss_total += loss.item()
                     val_iter += 1
                 #update learning rate

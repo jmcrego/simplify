@@ -3,7 +3,8 @@ cell: 'lstm'
 num_layers: 2
 bidirectional: True
 hidden_size: 4
-emb_size: 8
+emb_src_size: 8
+reuse_words: True
 attention: 'dot'
 coverage: False
 pointer: False

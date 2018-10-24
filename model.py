@@ -20,10 +20,12 @@ class Model(nn.Module):
         super(Model, self).__init__()
         self.cfg = cfg
 
-        self.embeddings = nn.Embedding(self.cfg.voc.size, self.cfg.emb_size) ### same embeddings for encoder and decoder
-        #self.embeddings.weight.data.copy_(torch.from_numpy(emb.matrix))
-        self.encoder = EncoderRNN(self.embeddings, self.cfg)
-        self.decoder = DecoderRNN_Attn(self.embeddings, self.cfg) 
+        self.embeddings_src = nn.Embedding(self.cfg.svoc.size, self.cfg.emb_src_size) ### embeddings for encoder
+        self.encoder = EncoderRNN(self.embeddings_src, self.cfg)
+
+        if self.cfg.reuse_words: self.embeddings_tgt = self.embeddings_src ### same embeddings for encoder and decoder
+        else: self.embeddings_tgt = nn.Embedding(self.cfg.tvoc.size, self.cfg.emb_tgt_size) ### new embeddings for decoder
+        self.decoder = DecoderRNN_Attn(self.embeddings_tgt, self.cfg) 
 
         sys.stderr.write('Initializing model pars\n')
         for param in self.encoder.parameters(): param.data.uniform_(-0.08, 0.08) #do not initialize the embeddings
