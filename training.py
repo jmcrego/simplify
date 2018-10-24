@@ -13,6 +13,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 class Training():
 
     def __init__(self, cfg, mod, opt, trn, val, chk):        
+        if cfg.n_iters_sofar is None: cfg.n_iters_sofar = 0
         ini_time = time.time()
         ###############################
         # loop over training batchs ###
@@ -36,7 +37,7 @@ class Training():
             mod.zero_grad() # reset gradients
             loss.backward() # Backward propagation
             opt.step()
-            mod.niters += 1
+            cfg.n_iters_sofar += 1 
             trn_iter += 1
             if trn_iter % cfg.par.print_every == 0:
                 curr_time = time.strftime("[%Y-%m-%d_%X]", time.localtime())
@@ -61,7 +62,7 @@ class Training():
                 #update learning rate
                 lr = opt.update_lr(val_loss_total)
                 curr_time = time.strftime("[%Y-%m-%d_%X]", time.localtime())
-                sys.stdout.write('{} VALID overall_iters:{} loss={:.4f}\n'.format(curr_time,mod.niters,val_loss_total/val_iter))
+                sys.stdout.write('{} VALID overall_iters:{} loss={:.4f}\n'.format(curr_time,cfg.n_iters_sofar,val_loss_total/val_iter))
                 chk.save(cfg, mod, opt, val_loss_total/val_iter)
             ############################
             # end if reached n_iters ###

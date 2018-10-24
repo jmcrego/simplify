@@ -21,7 +21,7 @@ def main():
         if chk.contains_model:
             cfg, mod, opt = chk.load()            
             cfg.add(par) ### updates cfg options read in checkpoint 
-            sys.stderr.write('Learning [resume It={}]...\n'.format(mod.niters))
+            sys.stderr.write('Learning [resume It={}]...\n'.format(cfg.n_iters_sofar))
         else:
             voc = Vocab(par.voc)
             cfg = Config(par.cfg)

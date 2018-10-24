@@ -19,8 +19,6 @@ class Model(nn.Module):
     def __init__(self, cfg):
         super(Model, self).__init__()
         self.cfg = cfg
-        self.niters = 0
-        self.best_loss = None
 
         self.embeddings = nn.Embedding(self.cfg.voc.size, self.cfg.emb_size) ### same embeddings for encoder and decoder
         #self.embeddings.weight.data.copy_(torch.from_numpy(emb.matrix))

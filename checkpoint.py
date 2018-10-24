@@ -4,6 +4,8 @@ import glob
 import time
 import shutil
 import torch
+from model import Model
+from optim import Optimizer
 
 class Checkpoint(object):
 
@@ -14,7 +16,7 @@ class Checkpoint(object):
     def save(self, cfg, mod, opt, loss):
         if not os.path.exists(self.path): os.makedirs(self.path)
         date_time = time.strftime('%Y-%m-%d_%H:%M:%S', time.localtime())
-        checkpoint = os.path.join(self.path, 'checkpoint_{}_{}_{:.4f}.pt'.format(date_time,mod.niters,loss)) 
+        checkpoint = os.path.join(self.path, 'checkpoint_{}_{}_{:.4f}.pt'.format(date_time,cfg.n_iters_sofar,loss)) 
         chk = {'mod': mod.state_dict(), 'opt': opt.state_dict(), 'cfg': cfg}
         torch.save(chk, checkpoint) 
         sys.stderr.write("Saved checkpoint [{}]\n".format(checkpoint))
@@ -27,14 +29,16 @@ class Checkpoint(object):
             checkpoint = all_saves[0]
         else: checkpoint = os.path.join(self.path, name)
         chk = torch.load(checkpoint) 
+        ### load cfg
         cfg = chk['cfg'] 
+        ### load model
         mod = Model(cfg)
         mod.load_state_dict(chk['mod'])
-        opt = Optimizer(cfg)
-        opt.load_state_dict(chk['opt'])
-
-        sys.stderr.write("Loaded It={} {}".format(mod.niters,checkpoint)) 
-        return cfg, mod, opt, voc
+        ### load optimizer
+        opt = Optimizer(cfg,mod)
+        opt.optimizer.load_state_dict(chk['opt'])
+        sys.stderr.write("Loaded It={} {}".format(cfg.n_iters_sofar,checkpoint)) 
+        return cfg, mod, opt
 
     def contains_model(self):
         all_saves = glob.glob(self.path+'/checkpoint_*.pt')
