@@ -19,7 +19,7 @@ class EncoderRNN(nn.Module):
         super(EncoderRNN, self).__init__()
         num_of_states = 2 if rnn_type == "lstm" else 1
         num_directions = 2 if bidirectional else 1
-        ### if bidirectional the number of hidden_units is divided by 2 for each direction
+        ### if bidirectional the number of hidden_size (units) is divided by 2 for each direction
         if hidden_size % num_directions != 0: sys.exit('error: hidden units {} must be an even number'.format(hidden_size)) 
         self.num_layers = num_layers
         self.hidden_size = hidden_size // num_directions

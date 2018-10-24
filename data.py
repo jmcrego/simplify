@@ -76,7 +76,7 @@ class Vocab():
 class Embed():
 
     def __init__(self, file, cfg, voc):
-        emb_len = cfg.emb_len
+        emb_size = cfg.emb_size
         w2e = {}
         if file is not None:
             #with io.open(file, 'r', encoding='utf-8', newline='\n', errors='ignore') as f:
@@ -88,14 +88,14 @@ class Embed():
                 tokens = line.rstrip().split(' ')
                 if voc.exists(tokens[0]): w2e[tokens[0]] = tokens[1:] 
             f.close()
-            if emb_len != self.dim: 
-                sys.stderr.write('warning: emb_len option in config file does not match with dimension of embedding file: replacing -emb_len {} by {}\n'.format(cfg.emb_len,self.dim))
-                cfg.emb_len = self.dim
+            if emb_size != self.dim: 
+                sys.stderr.write('warning: emb_size option in config file does not match with dimension of embedding file: replacing -emb_size {} by {}\n'.format(cfg.emb_size,self.dim))
+                cfg.emb_size = self.dim
 
             sys.stderr.write('Read {} embeddings ({} missing in voc)\n'.format(len(w2e),voc.length-len(w2e)))
         else:
-            sys.stderr.write('Embeddings randomly initialized!\n')
-            self.dim = emb_len
+            sys.stderr.write('Embeddings randomly initialized dim={}\n'.format(emb_size))
+            self.dim = emb_size
 
         # i need an embedding for each word in voc
         # embedding matrix must have tokens in same order than voc 0:<unk>, 1:<pad>, 2:le, ...

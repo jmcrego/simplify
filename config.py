@@ -10,8 +10,8 @@ class Config():
         self.cell = None
         self.num_layers = None
         self.bidirectional = None
-        self.hidden_units = None
-        self.emb_len = None
+        self.hidden_size = None
+        self.emb_size = None
         self.attention = 'none'
         self.coverage = None
         self.pointer = None
@@ -24,8 +24,8 @@ class Config():
             elif o=="cell":          self.cell = v.lower()
             elif o=="num_layers":    self.num_layers = int(v)
             elif o=="bidirectional": self.bidirectional = bool(v)
-            elif o=="hidden_units":  self.hidden_units = int(v)
-            elif o=="emb_len":       self.emb_len = int(v)
+            elif o=="hidden_size":   self.hidden_size = int(v)
+            elif o=="emb_size":      self.emb_size = int(v)
             elif o=="attention":     self.attention = v
             elif o=="coverage":      self.coverage = bool(v)
             elif o=="pointer":       self.pointer = bool(v)

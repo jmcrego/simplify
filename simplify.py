@@ -19,8 +19,8 @@ def main():
             cfg, mod, opt, voc = chk.load()            
             sys.stderr.write('Learning [resume It={}]...\n'.format(mod.niters))
         else:
-            cfg = Config(par.cfg)
             voc = Vocab(par.voc)
+            cfg = Config(par.cfg)
             emb = Embed(par.emb, cfg, voc) #embeddings read from file OR randomly initialised (length of vectors must match with that given in config file)
             mod = Model(cfg, voc, emb, dropout=par.dropout)
             if cfg.cuda: mod.cuda()
