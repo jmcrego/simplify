@@ -2,8 +2,8 @@ cuda: False
 cell: 'lstm'
 num_layers: 2
 bidirectional: True
-hidden_size: 256
-emb_size: 256
+hidden_size: 4
+emb_size: 8
 attention: 'dot'
 coverage: False
 pointer: False
