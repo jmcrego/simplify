@@ -19,13 +19,13 @@ def main():
     if par.trn and par.val:
         chk = Checkpoint(par.dir)
         if chk.contains_model: ####### resume training ####################
-            cfg, mod, opt = chk.load()            
-            cfg.update_par(par) ### updates cfg options with pars
+            cfg, mod, opt = chk.load() ### already in GPU if needed
+            cfg.update_par(par) ### updates par in cfg
             sys.stderr.write('Learning [resume It={}]...\n'.format(cfg.n_iters_sofar))
         else: ######## training from scratch ##############################
-            cfg = Config(par) 
+            cfg = Config(par) ### reads cfg and par (reads vocabularies)
             mod = Model(cfg)
-            if cfg.cuda: mod.cuda()
+            if cfg.cuda: mod.cuda() ### move to GPU
             opt = Optimizer(cfg, mod) #build Optimizer
             sys.stderr.write('Learning [from scratch]...\n')
 

@@ -37,6 +37,7 @@ class Checkpoint(object):
         ### load model
         mod = Model(cfg)
         mod.load_state_dict(chk['mod'])
+        if cfg.cuda: mod.cuda() ### move to GPU
         ### load optimizer
         opt = Optimizer(cfg,mod)
         opt.optimizer.load_state_dict(chk['opt'])
