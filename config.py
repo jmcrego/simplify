@@ -78,7 +78,8 @@ class Params():
         INFERENCE:
 *          -chk        FILE : checkpoint file to load when testing (or used the last one)
 *          -tst        FILE : run inference over FILE
-           -beam_size   INT : size of beam when decoding [5]""".format(argv.pop(0))
+           -beam_size   INT : size of beam when decoding [5]
+""".format(argv.pop(0))
 
         self.max_src_len = 400
         self.max_tgt_len = 50
