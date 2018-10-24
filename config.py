@@ -78,8 +78,7 @@ class Params():
         INFERENCE:
 *          -chk        FILE : checkpoint file to load when testing (or used the last one)
 *          -tst        FILE : run inference over FILE
-           -beam_size   INT : size of beam when decoding [5]
-""".format(argv.pop(0))
+           -beam_size   INT : size of beam when decoding [5]""".format(argv.pop(0))
 
         self.max_src_len = 400
         self.max_tgt_len = 50
@@ -123,10 +122,10 @@ class Params():
             else: sys.exit('error: unparsed {} option\n{}'.format(tok,usage))
 
         ### Checking some options
-        if not self.trn and not self.tst: sys.stderr.write('error: missing -trn or -tst options\n{}'.format(usage))
-        if self.trn and not self.dir: sys.stderr.write('error: missing -dir option\n{}'.format(usage))
-        if self.trn and not self.val: sys.stderr.write('error: missing -val option\n{}'.format(usage))
-        if self.tst and not self.chk: sys.stderr.write('error: missing -chk option\n{}'.format(usage))
+        if not self.trn and not self.tst: sys.stderr.write('error: missing -trn or -tst options\n{}\n'.format(usage))
+        if self.trn and not self.dir: sys.stderr.write('error: missing -dir option\n{}\n'.format(usage))
+        if self.trn and not self.val: sys.stderr.write('error: missing -val option\n{}\n'.format(usage))
+        if self.tst and not self.chk: sys.stderr.write('error: missing -chk option\n{}\n'.format(usage))
 
     def out(self):
         sys.stderr.write("PAR: "+', '.join(['{0}: {1}'.format(k, v) for k,v in sorted(vars(self).items())])+"\n")
