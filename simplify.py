@@ -36,7 +36,7 @@ def main():
         val = Dataset(par.val, cfg.voc, par.batch_size, par.max_src_len, par.max_tgt_len, do_shuffle=True, do_filter=True)
         Training(cfg, mod, opt, trn, val, chk)
 
-    elif tst:
+    elif par.tst:
         sys.stderr.write('Inference...\n')
         cfg, mod, opt = chk.load(par.mod)
         tst = Dataset(par.tst, cfg.voc, par.batch_size, 0, 0, do_shuffle=False, do_filter=False)
