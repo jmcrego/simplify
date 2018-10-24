@@ -41,14 +41,14 @@ class Config():
             elif o=="max_grad_norm": self.max_grad_norm = float(v)
             else: sys.exit("error: unparsed {} config option.".format(o))
 
-        if pars.voc_src is None: sys.exit('error: missing -voc_src option\n')
-        self.svoc = Vocab(par.voc_src)
+        if self.par.voc_src is None: sys.exit('error: missing -voc_src option\n')
+        self.svoc = Vocab(self.par.voc_src)
         if self.reuse_words:
             self.tvoc = self.svoc
             self.emb_tgt_size = self.emb_src_size
         else:
-            if pars.voc_tgt is None: sys.exit('error: missing -voc_tgt option\n')
-            self.tvoc = Vocab(par.voc_tgt)
+            if self.par.voc_tgt is None: sys.exit('error: missing -voc_tgt option\n')
+            self.tvoc = Vocab(self.par.voc_tgt)
         self.out()
 
     def update_par(self, par):
