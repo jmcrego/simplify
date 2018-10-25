@@ -11,6 +11,6 @@ def print_time(desc, milli=False):
 		curr_time = time.strftime("%Y-%m-%d_%X", time.localtime())
 	else:
 		curr_time = int(round(time.time() * 1000))
-	sys.stdout.write('[{}] {}\n'.format(curr_milli,desc))
+	sys.stdout.write('[{}] {}\n'.format(curr_time,desc))
 
 
