@@ -15,7 +15,6 @@ class Training():
 
     def __init__(self, cfg, mod, opt, trn, val, chk):
         if cfg.n_iters_sofar is None: cfg.n_iters_sofar = 0
-        if cfg.n_examp_sofar is None: cfg.n_examp_sofar = 0
         ini_time = time.time()
         ###############################
         # loop over training batchs ###
@@ -40,10 +39,9 @@ class Training():
             loss.backward() # Backward propagation
             opt.step()
             cfg.n_iters_sofar += 1 
-            cfg.n_examp_sofar += len(src_batch) 
             trn_iter += 1
             if trn_iter > 0 and trn_iter % cfg.par.print_every == 0:
-                print_time('TRAIN iter:{} examples:{} lr={:.5f} loss={:.4f}'.format(cfg.n_iters_sofar,cfg.n_examp_sofar,lr,trn_loss_total/trn_iter))
+                print_time('TRAIN iter:{} lr={:.5f} loss={:.4f}'.format(cfg.n_iters_sofar,lr,trn_loss_total/trn_iter))
             ############################
             # validation on validset ###
             ############################

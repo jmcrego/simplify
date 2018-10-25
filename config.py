@@ -23,7 +23,6 @@ class Config():
         self.method = None         
         self.max_grad_norm = None
         self.n_iters_sofar = None
-        self.n_examp_sofar = None
 
         with open(file, 'r') as stream: opts = yaml.load(stream)
         for o,v in opts.items():
