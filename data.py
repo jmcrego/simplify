@@ -115,16 +115,21 @@ class Embed():
 
 class Dataset():
 
-    def __init__(self, file, svoc, tvoc, batch_size, max_src_len, max_tgt_len, do_shuffle, do_filter):
+    def __init__(self, file, svoc, tvoc, batch_size, max_src_len, max_tgt_len, is_test):
         if file is None: return
+        self.is_test = is_test
+        if not is_test:
+                self.do_shuffle = True
+                self.do_filter = True
+        else:
+                self.do_shuffle = False
+                self.do_filter = False
         self.file = file
         self.batch_size = batch_size
         self.max_src_len = max_src_len
         self.max_tgt_len = max_tgt_len
         self.svoc = svoc
         self.tvoc = tvoc
-        self.do_shuffle = do_shuffle
-        self.do_filter = do_filter ### in case of test no filtering is performed
         self.data = []
         if self.file.endswith('.gz'): f = gzip.open(self.file, 'rb')
         else: f = io.open(self.file, 'r', encoding='utf-8', newline='\n', errors='ignore')
