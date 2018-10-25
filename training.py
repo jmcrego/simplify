@@ -9,6 +9,7 @@ import torch.nn.functional as F
 from torch import optim
 from optim import Optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from utils import print_time
 
 class Training():
 
@@ -25,26 +26,26 @@ class Training():
         trn_loss_total = 0  # Reset every print_every
         trn_iter = 0
         for (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch, len_tgt_batch) in trn.minibatches():
-            self.print_time('get_batch')
+            print_time('get_batch')
             if cfg.cuda:
                 src_batch = src_batch.cuda()
                 tgt_batch = tgt_batch.cuda()
                 ref_batch = ref_batch.cuda()
-            self.print_time('cuda')
+            print_time('cuda')
             #######################
             # learn on trainset ###
             #######################
             dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) # forward
-            self.print_time('forward')
+            print_time('forward')
             loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad) # Get loss
-            self.print_time('loss')
+            print_time('loss')
             trn_loss_total += loss.item()
             mod.zero_grad() # reset gradients
-            self.print_time('zero_grad')
+            print_time('zero_grad')
             loss.backward() # Backward propagation
-            self.print_time('backward')
+            print_time('backward')
             opt.step()
-            self.print_time('step')
+            print_time('step')
             cfg.n_iters_sofar += 1 
             cfg.n_examp_sofar += len(src_batch) 
             trn_iter += 1
@@ -82,7 +83,4 @@ class Training():
         seconds = "{:.2f}".format(time.time() - ini_time)
         sys.stdout.write('{} End of TRAIN seconds={}\n'.format(curr_time,seconds))
 
-    def print_time(self, desc):
-        curr_time = time.strftime("[%Y-%m-%d_%X]", time.localtime())
-        sys.stdout.write('{} TRAIN {}\n'.format(curr_time,desc))
 
