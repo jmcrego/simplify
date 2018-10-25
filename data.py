@@ -134,46 +134,47 @@ class Dataset():
         self.length = len(self.data)
 
     def __iter__(self):
-        nsent = 0
-        self.nsrc = 0
-        self.ntgt = 0
-        self.nunk_src = 0
-        self.nunk_tgt = 0
         ### every iteration i get shuffled data examples if do_shuffle
         indexs = [i for i in range(len(self.data))]
         if self.do_shuffle: shuffle(indexs)
-        for index in indexs:
-            tokens = self.data[index].strip().split('\t')
-            if len(tokens) > 2 or len(tokens)<1:
-                #sys.stderr.write("warning: bad data entry in line={} [skipped]\n".format(index+1))
-                continue
-            ### filter out sentences not respecting limits
-            src, tgt = [], []
-            if len(tokens)>=1:
-                src = tokens[0].split(' ')
-                if len(src) == 0 or (self.do_filter and self.max_src_len > 0 and len(src) > self.max_src_len): 
-                    #sys.stderr.write("filtered entry by src_len={} in line={}\n".format(len(src),index+1))
+        while True:
+            self.nsent = 0
+            self.nsrc = 0
+            self.ntgt = 0
+            self.nunk_src = 0
+            self.nunk_tgt = 0
+            for index in indexs:
+                tokens = self.data[index].strip().split('\t')
+                if len(tokens) > 2 or len(tokens)<1:
+                    #sys.stderr.write("warning: bad data entry in line={} [skipped]\n".format(index+1))
                     continue
-            if len(tokens)==2:
-                tgt = tokens[1].split(' ')
-                if len(tgt) == 0 or (self.do_filter and self.max_tgt_len > 0 and len(tgt) > self.max_tgt_len): 
-                    #sys.stderr.write("filtered entry by tgt_len={} in line={}\n".format(len(tgt),index+1))
-                    continue
-            ### src tokens
-            isrc = []
-            for s in src: 
-                isrc.append(self.svoc.get(s))
-                if isrc[-1]==idx_unk: self.nunk_src += 1
-                self.nsrc += 1
-            ### tgt tokens
-            itgt = []
-            for t in tgt: 
-                itgt.append(self.tvoc.get(t))
-                if itgt[-1]==idx_unk: self.nunk_tgt += 1
-                self.ntgt += 1
-            yield isrc, itgt, src, tgt ### return for iterator
-            nsent += 1
-        print('finished dataset pairs, total entries are {}'.format(len(indexs)))
+                ### filter out sentences not respecting limits
+                src, tgt = [], []
+                if len(tokens)>=1:
+                    src = tokens[0].split(' ')
+                    if len(src) == 0 or (self.do_filter and self.max_src_len > 0 and len(src) > self.max_src_len): 
+                        #sys.stderr.write("filtered entry by src_len={} in line={}\n".format(len(src),index+1))
+                        continue
+                if len(tokens)==2:
+                    tgt = tokens[1].split(' ')
+                    if len(tgt) == 0 or (self.do_filter and self.max_tgt_len > 0 and len(tgt) > self.max_tgt_len): 
+                        #sys.stderr.write("filtered entry by tgt_len={} in line={}\n".format(len(tgt),index+1))
+                        continue
+                ### src tokens
+                isrc = []
+                for s in src: 
+                    isrc.append(self.svoc.get(s))
+                    if isrc[-1]==idx_unk: self.nunk_src += 1
+                    self.nsrc += 1
+                ### tgt tokens
+                itgt = []
+                for t in tgt: 
+                    itgt.append(self.tvoc.get(t))
+                    if itgt[-1]==idx_unk: self.nunk_tgt += 1
+                    self.ntgt += 1
+                yield isrc, itgt, src, tgt ### return for iterator
+                self.nsent += 1
+            print('Finished loop over dataset. nsents={} nwords=({}/{}) nunks=({},{})'.format(self.nsent, self.nsrc, self.ntgt, self.nunk_src, self.nunk_tgt))
 
     def minibatches(self):
         minibatch_size = self.batch_size
