@@ -35,7 +35,7 @@ class Attention(nn.Module):
             attn_energies = torch.bmm(dec_hidden.unsqueeze(1), enc_outputs.permute(1,2,0)) # (B, 1, H) x (B, H, S) --> (B, 1, S)
             attn_energies = attn_energies.squeeze(1) # [B, S]
         elif self.method == 'general':
-            enc_output = self.attn(enc_output)
+            enc_output = self.attn(enc_output) #[S, B, H]
             attn_energies = torch.bmm(dec_hidden.unsqueeze(1), enc_outputs.permute(1,2,0)) # (B, 1, H) x (B, H, S) --> (B, 1, S)
             attn_energies = attn_energies.squeeze(1) # [B, S]
         elif self.method == 'concat':
