@@ -32,15 +32,15 @@ def main():
             opt = Optimizer(cfg, mod) #build Optimizer
             print_time('Learning [from scratch]...')
 
-        trn = Dataset(par.trn, cfg.svoc, cfg.tvoc, par.batch_size, par.max_src_len, par.max_tgt_len, is_test=False)
-        val = Dataset(par.val, cfg.svoc, cfg.tvoc, par.batch_size, 0, 0, is_test=True)
+        trn = Dataset(par.trn, cfg.svoc, cfg.tvoc, par.batch_size, par.max_src_len, par.max_tgt_len, do_shuffle=True, do_filter=True, is_test=False)
+        val = Dataset(par.val, cfg.svoc, cfg.tvoc, par.batch_size, par.max_src_len, par.max_tgt_len, do_shuffle=True, do_filter=True, is_test=True)
         Training(cfg, mod, opt, trn, val, chk)
 
     elif par.tst: ######## inference ######################################
         chk = Checkpoint()
         cfg, mod, opt = chk.load(par.chk)
         cfg.update_par(par) ### updates cfg options with pars
-        tst = Dataset(par.tst, cfg.svoc, cfg.tvoc, par.batch_size, 0, 0, is_test=True)
+        tst = Dataset(par.tst, cfg.svoc, cfg.tvoc, par.batch_size, 0, 0, do_shuffle=False, do_filter=False, is_test=True)
         print_time('Inference [It={}]...'.format(cfg.n_iters_sofar))
         Inference(cfg, mod, tst)
 

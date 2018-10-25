@@ -115,15 +115,9 @@ class Embed():
 
 class Dataset():
 
-    def __init__(self, file, svoc, tvoc, batch_size, max_src_len, max_tgt_len, is_test):
+    def __init__(self, file, svoc, tvoc, batch_size, max_src_len, max_tgt_len, do_shuffle, do_filter, is_test):
         if file is None: return
         self.is_test = is_test
-        if not is_test:
-                self.do_shuffle = True
-                self.do_filter = True
-        else:
-                self.do_shuffle = False
-                self.do_filter = False
         self.file = file
         self.batch_size = batch_size
         self.max_src_len = max_src_len
