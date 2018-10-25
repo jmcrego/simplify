@@ -14,7 +14,10 @@ class Inference():
     def __init__(self, cfg, mod, tst):
         ini_time = time.time()
         print_time('Start TEST')
-        for val_iter, (src_batch, tgt_batch, target_batch, raw_src_batch, raw_tgt_batch, len_src_batch, len_tgt_batch) in enumerate(tst.minibatches()):
+        for val_iter, (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch, len_tgt_batch) in enumerate(tst.minibatches()):
+            if cfg.cuda:
+                src_batch = src_batch.cuda()
+                tgt_batch = tgt_batch.cuda()
             _, predict_batch = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward
             self.display(mod, predict_batch)
 
