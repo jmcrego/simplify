@@ -26,9 +26,9 @@ class Inference():
 
 
     def display(self, mod, predict_batch):
-
         for predict_sentence in predict_batch:
-            for word_id in predict:
+            sentence = []
+            for word_id in predict_sentence:
                 word = cfg.tvoc.get(int(word_id))
                 sentence.append("{}".format(word))
             print(sentence)
