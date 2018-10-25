@@ -46,6 +46,7 @@ class Training():
             # validation on validset ###
             ############################
             if trn_iter > 0 and trn_iter % cfg.par.valid_every == 0:
+                print_time('Start VALID')
                 val_loss_total = 0
                 val_iter = 0
                 for (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch, len_tgt_batch) in val.minibatches():

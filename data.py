@@ -180,7 +180,7 @@ class Dataset():
                 yield isrc, itgt, src, tgt ### return for iterator
                 self.nsent += 1
             sys.stderr.write('Finished loop over dataset: unpruned sentences={}/{} nwords=({}/{}) nunks=({},{})\n'.format(self.nsent, len(indexs), self.nsrc, self.ntgt, self.nunk_src, self.nunk_tgt))
-            if self.is_test: return
+            if self.is_test: break
 
     def minibatches(self):
         minibatch_size = self.batch_size
