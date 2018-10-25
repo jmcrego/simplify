@@ -61,7 +61,7 @@ class Config():
         is_First = True
         for k, v in sorted(vars(self).items()): 
             if (k!='par' and k!='svoc' and k!='tvoc'): 
-                if is_First: 
+                if not is_First: 
                     sys.stderr.write(",")
                     is_First = False
                 sys.stderr.write(" {}: {}".format(k,v))
