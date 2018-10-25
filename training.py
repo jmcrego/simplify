@@ -64,7 +64,7 @@ class Training():
                 lr = opt.update_lr(val_loss_total)
                 if val_iter > 0:
                     curr_time = time.strftime("[%Y-%m-%d_%X]", time.localtime())
-                    sys.stdout.write('{} VALID iter:{} examples:{} loss={:.4f}\n'.format(curr_time, cfg.n_iters_sofar, cfg.n_examp_sofar, val_loss_total/val_iter))
+                    sys.stdout.write('{} VALID iter:{} loss={:.4f}\n'.format(curr_time, cfg.n_iters_sofar, val_loss_total/val_iter))
                     chk.save(cfg, mod, opt, val_loss_total/val_iter)
             ############################
             # end if reached n_iters ###
