@@ -173,7 +173,7 @@ class Dataset():
                 self.ntgt += 1
             yield isrc, itgt, src, tgt ### return for iterator
             nsent += 1
-        print('finished dataset pairs')
+        print('finished dataset pairs, total entries are {}'.format(len(indexs)))
 
     def minibatches(self):
         minibatch_size = self.batch_size
