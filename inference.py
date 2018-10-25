@@ -32,4 +32,4 @@ class Inference():
             for word_id in predict_sentence:
                 word = self.cfg.tvoc.get(int(word_id))
                 sentence.append("{}".format(word))
-            print(sentence)
+            print(' '.join(sentence))
