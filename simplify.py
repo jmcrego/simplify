@@ -33,7 +33,7 @@ def main():
             print_time('Learning [from scratch]...')
 
         trn = Dataset(par.trn, cfg.svoc, cfg.tvoc, par.batch_size, par.max_src_len, par.max_tgt_len, is_test=False)
-        val = Dataset(par.val, cfg.svoc, cfg.tvoc, par.batch_size, par.max_src_len, par.max_tgt_len, is_test=False)
+        val = Dataset(par.val, cfg.svoc, cfg.tvoc, par.batch_size, 0, 0, is_test=True)
         Training(cfg, mod, opt, trn, val, chk)
 
     elif par.tst: ######## inference ######################################
