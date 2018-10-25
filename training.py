@@ -68,6 +68,6 @@ class Training():
             if trn_iter >= cfg.par.n_iters: break
 
         seconds = "{:.2f}".format(time.time() - ini_time)
-        print_time('End of TRAIN iter={} seconds={}'.format(trn_iter, seconds))
+        print_time('End of TRAIN iters_done={} iters_todo={} seconds={}'.format(trn_iter, cfg.par.n_iters, seconds))
 
 
