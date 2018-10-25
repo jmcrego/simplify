@@ -137,7 +137,7 @@ class Params():
             elif (tok=="-lr"          and len(argv)): self.lr = float(argv.pop(0))
             elif (tok=="-decay"       and len(argv)): self.decay = float(argv.pop(0))
             elif (tok=="-tst"         and len(argv)): self.tst = argv.pop(0)
-            elif (tok=="-chk"         and len(argv)): self.chd = argv.pop(0)
+            elif (tok=="-chk"         and len(argv)): self.chk = argv.pop(0)
             elif (tok=="-voc_src"     and len(argv)): self.voc_src = argv.pop(0)
             elif (tok=="-voc_tgt"     and len(argv)): self.voc_tgt = argv.pop(0)
             elif (tok=="-emb_src"     and len(argv)): self.emb_src = argv.pop(0)
