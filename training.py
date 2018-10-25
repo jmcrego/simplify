@@ -82,7 +82,7 @@ class Training():
         seconds = "{:.2f}".format(time.time() - ini_time)
         sys.stdout.write('{} End of TRAIN seconds={}\n'.format(curr_time,seconds))
 
-        def print_time(self, desc):
-            curr_time = time.strftime("[%Y-%m-%d_%X]", time.localtime())
-            sys.stdout.write('{} TRAIN {}\n'.format(curr_time,desc))
+    def print_time(self, desc):
+        curr_time = time.strftime("[%Y-%m-%d_%X]", time.localtime())
+        sys.stdout.write('{} TRAIN {}\n'.format(curr_time,desc))
 
