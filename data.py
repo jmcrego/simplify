@@ -175,7 +175,7 @@ class Dataset():
                     self.ntgt += 1
                 yield isrc, itgt, src, tgt ### return for iterator
                 self.nsent += 1
-            sys.stderr.write('Finished loop over dataset: unpruned examples={} out of {}, nwords=({}/{}), nunks=({},{})\n'.format(self.nsent, len(indexs), self.nsrc, self.ntgt, self.nunk_src, self.nunk_tgt))
+            sys.stderr.write('Traversed {}: unpruned examples={} out of {}, nwords=({}/{}), nunks=({},{})\n'.format(self.file, self.nsent, len(indexs), self.nsrc, self.ntgt, self.nunk_src, self.nunk_tgt))
             if self.is_test: break
 
     def minibatches(self):
