@@ -24,15 +24,15 @@ class Checkpoint(object):
         torch.save(chk, checkpoint) 
         print_time("Saved checkpoint [{}]".format(checkpoint))
 
-    def load(self, name=None):
-        if name is None:
+    def load(self, file=None):
+        if file is None:
             if not os.path.exists(self.path): sys.exit('error: no experiments found in {}'.format(self.path))
             all_saves = sorted(glob.glob(self.path+'/checkpoint_*.pt'), reverse=True)
             if len(all_saves)==0: sys.exit('error: no checkpoint found in dir={}'.format(self.path))
             checkpoint = all_saves[0]
         else: 
-            if not os.path.exists(name): sys.exit('error: no checkpoint found in {}'.format(name))
-            checkpoint = name
+            if not os.path.exists(file): sys.exit('error: no checkpoint found in {}'.format(file))
+            checkpoint = file
         chk = torch.load(checkpoint) 
         ### load cfg
         cfg = chk['cfg'] 

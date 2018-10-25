@@ -26,6 +26,6 @@ class Inference():
 
         for predict_sentence in predict_batch:
             for word_id in predict:
-                word = mod.voc.get(int(word_id))
+                word = cfg.tvoc.get(int(word_id))
                 sentence.append("{}".format(word))
             print(sentence)
