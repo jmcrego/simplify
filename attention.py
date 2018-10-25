@@ -39,7 +39,7 @@ class Attention(nn.Module):
         for b in range(B): #for all batches
             for j in range(S): # Calculate energy for each enc_output (referred to each source word)
                 attn_energies[b, j] = self.energy(dec_hidden[b], enc_outputs[j, b])
-                print_time('attn_energies[{},{}]'.format(b,j))
+            print_time('attn_energies[batch={}]'.format(b))
 
         # Normalize energies to weights in range 0 to 1
         attn_energies_norm = F.softmax(attn_energies, dim=1)
