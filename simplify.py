@@ -38,6 +38,7 @@ def main():
 
     elif par.tst: ######## inference ######################################
         chk = Checkpoint()
+        print(par.chk)
         cfg, mod, opt = chk.load(par.chk)
         cfg.update_par(par) ### updates cfg options with pars
         tst = Dataset(par.tst, cfg.svoc, cfg.tvoc, par.batch_size, 0, 0, do_shuffle=False, do_filter=False, is_test=True)
