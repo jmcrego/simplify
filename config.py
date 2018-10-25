@@ -23,6 +23,7 @@ class Config():
         self.method = None         
         self.max_grad_norm = None
         self.n_iters_sofar = None
+        self.n_examp_sofar = None
 
         with open(file, 'r') as stream: opts = yaml.load(stream)
         for o,v in opts.items():
@@ -57,8 +58,13 @@ class Config():
 
     def out(self):
         sys.stderr.write("CFG:")
+        is_First = True
         for k, v in sorted(vars(self).items()): 
-            if (k!='par' and k!='svoc' and k!='tvoc'): sys.stderr.write(" {}: {}".format(k,v))
+            if (k!='par' and k!='svoc' and k!='tvoc'): 
+                if is_First: 
+                    sys.stderr.write(",")
+                    is_First = False
+                sys.stderr.write(" {}: {}".format(k,v))
         sys.stderr.write("\n")
         sys.stderr.write("SVOC: size: {}\n".format(self.svoc.size))
         sys.stderr.write("TVOC: size: {}\n".format(self.tvoc.size))
@@ -124,6 +130,8 @@ class Params():
             elif (tok=="-trn"         and len(argv)): self.trn = argv.pop(0)
             elif (tok=="-val"         and len(argv)): self.val = argv.pop(0)
             elif (tok=="-n_iters"     and len(argv)): self.n_iters = int(argv.pop(0))
+            elif (tok=="-max_src_len" and len(argv)): self.max_src_len = int(argv.pop(0))
+            elif (tok=="-max_tgt_len" and len(argv)): self.max_tgt_len = int(argv.pop(0))
             elif (tok=="-batch_size"  and len(argv)): self.batch_size = int(argv.pop(0))
             elif (tok=="-dropout"     and len(argv)): self.dropout = float(argv.pop(0))
             elif (tok=="-lr"          and len(argv)): self.lr = float(argv.pop(0))

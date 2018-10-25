@@ -145,19 +145,19 @@ class Dataset():
         for index in indexs:
             tokens = self.data[index].strip().split('\t')
             if len(tokens) > 2 or len(tokens)<1:
-                #sys.stderr.write("warning: bad data entry \'{}\' in line={} [skipped]\n".format(self.data[index],index+1))
+                #sys.stderr.write("warning: bad data entry in line={} [skipped]\n".format(index+1))
                 continue
             ### filter out sentences not respecting limits
             src, tgt = [], []
             if len(tokens)>=1:
                 src = tokens[0].split(' ')
                 if len(src) == 0 or (self.do_filter and self.max_src_len > 0 and len(src) > self.max_src_len): 
-                    #sys.stderr.write("filtered entry \'{}\' in line={}\n".format(self.data[index],index+1))
+                    #sys.stderr.write("filtered entry by src_len={} in line={}\n".format(len(src),index+1))
                     continue
             if len(tokens)==2:
                 tgt = tokens[1].split(' ')
                 if len(tgt) == 0 or (self.do_filter and self.max_tgt_len > 0 and len(tgt) > self.max_tgt_len): 
-                    #sys.stderr.write("filtered entry \'{}\' in line={}\n".format(self.data[index],index+1))
+                    #sys.stderr.write("filtered entry by tgt_len={} in line={}\n".format(len(tgt),index+1))
                     continue
             ### src tokens
             isrc = []

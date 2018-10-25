@@ -42,7 +42,7 @@ class Checkpoint(object):
         ### load optimizer
         opt = Optimizer(cfg,mod)
         opt.optimizer.load_state_dict(chk['opt'])
-        sys.stderr.write("Loaded It={} {}".format(cfg.n_iters_sofar,checkpoint)) 
+        sys.stderr.write("Loaded It={} {}\n".format(cfg.n_iters_sofar,checkpoint)) 
         return cfg, mod, opt
 
     def contains_model(self):

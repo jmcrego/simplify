@@ -12,8 +12,9 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 class Training():
 
-    def __init__(self, cfg, mod, opt, trn, val, chk):        
+    def __init__(self, cfg, mod, opt, trn, val, chk):
         if cfg.n_iters_sofar is None: cfg.n_iters_sofar = 0
+        if cfg.n_examp_sofar is None: cfg.n_examp_sofar = 0
         ini_time = time.time()
         ###############################
         # loop over training batchs ###
@@ -38,14 +39,15 @@ class Training():
             loss.backward() # Backward propagation
             opt.step()
             cfg.n_iters_sofar += 1 
+            cfg.n_examp_sofar += len(src_batch) 
             trn_iter += 1
-            if trn_iter % cfg.par.print_every == 0:
+            if trn_iter > 0 and trn_iter % cfg.par.print_every == 0:
                 curr_time = time.strftime("[%Y-%m-%d_%X]", time.localtime())
-                sys.stdout.write('{} TRAIN iter:{} lr={:.5f} loss={:.4f}\n'.format(curr_time,trn_iter,lr,trn_loss_total/trn_iter))
+                sys.stdout.write('{} TRAIN iter:{} examples:{} lr={:.5f} loss={:.4f}\n'.format(curr_time,cfg.n_iters_sofar,cfg.n_examp_sofar,lr,trn_loss_total/trn_iter))
             ############################
             # validation on validset ###
             ############################
-            if trn_iter % cfg.par.valid_every == 0:
+            if trn_iter > 0 and trn_iter % cfg.par.valid_every == 0:
                 curr_time = time.strftime("[%Y-%m-%d_%X]", time.localtime())
                 val_loss_total = 0
                 val_iter = 0
@@ -60,9 +62,10 @@ class Training():
                     val_iter += 1
                 #update learning rate
                 lr = opt.update_lr(val_loss_total)
-                curr_time = time.strftime("[%Y-%m-%d_%X]", time.localtime())
-                sys.stdout.write('{} VALID overall_iters:{} loss={:.4f}\n'.format(curr_time,cfg.n_iters_sofar,val_loss_total/val_iter))
-                chk.save(cfg, mod, opt, val_loss_total/val_iter)
+                if val_iter > 0:
+                    curr_time = time.strftime("[%Y-%m-%d_%X]", time.localtime())
+                    sys.stdout.write('{} VALID iter:{} examples:{} loss={:.4f}\n'.format(curr_time, cfg.n_iters_sofar, cfg.n_examp_sofar, val_loss_total/val_iter))
+                    chk.save(cfg, mod, opt, val_loss_total/val_iter)
             ############################
             # end if reached n_iters ###
             ############################
