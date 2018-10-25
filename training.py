@@ -20,7 +20,7 @@ class Training():
         # loop over training batchs ###
         ###############################
 #        curr_time = time.strftime("[%Y-%m-%d_%X]", time.localtime())    
-        sys.stdout.write('Start TRAIN')
+        print_time('Start TRAIN')
         lr = cfg.par.lr
         trn_loss_total = 0  # Reset every print_every
         trn_iter = 0
