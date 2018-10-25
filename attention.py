@@ -34,19 +34,26 @@ class Attention(nn.Module):
         S = enc_outputs.size(0)
         B = enc_outputs.size(1)
         # Create variable to store attention energies
-        attn_energies = Variable(torch.zeros(B, S)) # [B, S]
-        if self.cuda: attn_energies = attn_energies.cuda()
+
         print_time('attn_energies before')
-        for b in range(B): #for all batches
-            for j in range(S): # Calculate energy for each enc_output (referred to each source word)
-                attn_energies[b, j] = self.energy(dec_hidden[b], enc_outputs[j, b])
+        # (B, 1, H) x (B, H, S) --> (B, 1, S)
+        attn_energies = torch.bmm(dec_hidden.unsqueeze(1), enc_outputs.permute(1,2,0))
+        attn_energies = attn_energies.squeeze(1) # [B, S]
+
+
+#        attn_energies = Variable(torch.zeros(B, S)) # [B, S]
+#        if self.cuda: attn_energies = attn_energies.cuda()
+#        print_time('attn_energies before')
+#        for b in range(B): #for all batches
+#            for j in range(S): # Calculate energy for each enc_output (referred to each source word)
+#                attn_energies[b, j] = self.score(dec_hidden[b], enc_outputs[j, b])
         print_time('attn_energies after')
 
         # Normalize energies to weights in range 0 to 1
         attn_energies_norm = F.softmax(attn_energies, dim=1)
         return attn_energies_norm #[B, S]
 
-    def energy(self, dec_hidden, enc_output):
+    def score(self, dec_hidden, enc_output):
         #print("dec_hidden={}".format(dec_hidden.shape)) #[1, H]
         #print("enc_output={}".format(enc_output.shape)) #[1, H]
         if self.method == 'dot':
