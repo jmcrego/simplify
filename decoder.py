@@ -44,35 +44,35 @@ class DecoderRNN_Attn(nn.Module):
         self.B = tgt_batch.shape[0] #batch_size
         self.S = tgt_batch.shape[1] #seq_size
         tgt_batch = tgt_batch.transpose(1,0) #tgt_batch is [S, B]
-        print_time('tgt_batch.transpose')
+#        print_time('tgt_batch.transpose')
         ### these are the output vectors that will be filled at the end of the loop
         dec_output_words = torch.zeros([self.S - 1, self.B], dtype=torch.int32) #[S-1, B]
         dec_outputs = torch.zeros([self.S - 1, self.B, self.V], dtype=torch.float32) #[S-1, B, V]
-        print_time('initialize dec_output_words/dec_outputs')
+#        print_time('initialize dec_output_words/dec_outputs')
         if self.cuda: 
             dec_output_words = dec_output_words.cuda()
             dec_outputs = dec_outputs.cuda()
-        print_time('cuda')
+#        print_time('cuda')
         ### initialize dec_hidden (with dec_final)
         dec_hidden = self.init_state(enc_final) #[L, B, D*dim] #dim is H/2
-        print_time('initialize dec_hidden')
+#        print_time('initialize dec_hidden')
         ### initialize attn_hidden (Eq 5 in Luong) used for input-feeding
         attn_hidden = Variable(torch.zeros(1, self.B, self.H)) #[1, B, H]
-        print_time('initialize attn_hidden')
+#        print_time('initialize attn_hidden')
         if self.cuda: attn_hidden = attn_hidden.cuda()
         for t in range(self.S-1): #loop to produce target words step by step
             ### decide which is the input word: consider teacher forcing
             if t==0: input_word = tgt_batch[t] ### it should be <ini>
             elif teacher_forcing < 1.0 and random.uniform() > teacher_forcing: input_word = dec_output_word #use t-1 predicted words
             else: input_word = tgt_batch[t] ### teacher forcing: the t-th words of each batch 
-            print_time('t={} input_word located'.format(t))
+#            print_time('t={} input_word located'.format(t))
             target_word = tgt_batch[t + 1] ### this is the reference for the words to be predicted
             dec_output, dec_hidden, attn_hidden, dec_attn = self.forward_step(input_word, attn_hidden, dec_hidden, enc_outputs)
-            print_time('t={} forward step'.format(t))
+#            print_time('t={} forward step'.format(t))
             ### get the 1-best
             top_val, dec_output_word = dec_output.topk(1) #dec_output_word is [batch_size, 1] (the best entry of each batch)   
             dec_output_word = dec_output_word.squeeze(1)
-            print_time('t={} 1-best'.format(t))
+#            print_time('t={} 1-best'.format(t))
             ### add to final output vectors
             dec_output_words[t] = dec_output_word #[t, B]
             dec_outputs[t] = dec_output #[t, B, V]
@@ -87,15 +87,15 @@ class DecoderRNN_Attn(nn.Module):
         #print("enc_outputs={}".format(enc_outputs.shape))  #[S, B, H] encoder outputs
         # get the embedding of the current input word (is the previous target word)
         input_emb = self.embedding(torch.tensor(input_word))
-        print_time('forward step: input embedded')
+#        print_time('forward step: input embedded')
         input_emb = self.dropout(input_emb) #[B, E]
-        print_time('forward step: dropout')
+#        print_time('forward step: dropout')
         input_emb = input_emb.unsqueeze(0) # [1, B, E]
         #input feeding: input_emb + attn_hidden
         input_emb_attn = torch.cat((input_emb, attn_hidden), 2)
         #rnn layer
         rnn_output, dec_hidden = self.rnn(input_emb_attn, dec_hidden)
-        print_time('forward step: rnn')
+#        print_time('forward step: rnn')
         rnn_output = rnn_output.squeeze(0) # [1, B, H] -> [B, H]
         #print("rnn_output={}".format(rnn_output.shape)) #[B, H]
         #print("dec_hidden[0]={}".format(dec_hidden[0].shape)) #[L, B, H] (h)
@@ -107,7 +107,7 @@ class DecoderRNN_Attn(nn.Module):
         # apply to encoder outputs to get weighted average
         last_h_state = dec_hidden[0][-1]
         attn_weights = self.attn(dec_hidden[0][-1], enc_outputs) # [B, S]
-        print_time('forward step: attn')
+#        print_time('forward step: attn')
 
         attn_weights = attn_weights.unsqueeze(0) # [1, B, S]
         #print("attn_weights={}".format(attn_weights.shape)) #[1, B, S]
@@ -118,15 +118,15 @@ class DecoderRNN_Attn(nn.Module):
         cat_rnnoutput_context = torch.cat((rnn_output, context), 1) # [B, 2*H]
         #print('cat_rnnoutput_context={}'.format(cat_rnnoutput_context.shape)) 
         attn_hidden = torch.tanh(self.concat(cat_rnnoutput_context)) #[B, H] applied concat layer 
-        print_time('forward step: concat')
+#        print_time('forward step: concat')
         #print('attn_hidden={}'.format(attn_hidden.shape)) #[B, H]
         # aply output layer (Luong eq. 6)
         dec_output = self.output(attn_hidden) # [B, V]
-        print_time('forward step: output')
+#        print_time('forward step: output')
         #print("dec_output={}".format(dec_output.shape))
         # apply softmax layer
         dec_output = F.log_softmax(dec_output, dim=1) #[B, V]
-        print_time('forward step: log_softmax')
+#        print_time('forward step: log_softmax')
         #print("dec_output={}".format(dec_output.shape))
         attn_hidden = attn_hidden.unsqueeze(0) #[B, H] => [1, B, H] (vector used for input-feeding)
         #print("attn_hidden={}".format(attn_hidden.shape))
