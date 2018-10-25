@@ -1,4 +1,4 @@
-cuda: False
+cuda: Fals
 cell: 'lstm'
 num_layers: 2
 bidirectional: True

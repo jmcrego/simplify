@@ -67,7 +67,8 @@ class Config():
                 sys.stderr.write(" {}: {}".format(k,v))
         sys.stderr.write("\n")
         sys.stderr.write("SVOC: size: {}\n".format(self.svoc.size))
-        sys.stderr.write("TVOC: size: {}\n".format(self.tvoc.size))
+        if self.reuse_words: sys.stderr.write("TVOC: reuse\n")
+        else: sys.stderr.write("TVOC: size: {}\n".format(self.tvoc.size))
         self.par.out()
 
 
