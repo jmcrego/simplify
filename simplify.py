@@ -10,6 +10,7 @@ from data import Dataset, Vocab, Embed
 from training import Training
 from inference import Inference
 from checkpoint import Checkpoint
+from utils import print_time
 
 def main():
 
@@ -22,14 +23,14 @@ def main():
         if chk.contains_model: ####### resume training ####################
             cfg, mod, opt = chk.load() ### also moves to GPU if cfg.cuda
             cfg.update_par(par) ### updates par in cfg
-            sys.stderr.write('Learning [resume It={}]...\n'.format(cfg.n_iters_sofar))
+            print_time('Learning [resume It={}]...'.format(cfg.n_iters_sofar))
 
         else: ######## training from scratch ##############################
             cfg = Config(par) ### reads cfg and par (reads vocabularies)
             mod = Model(cfg)
             if cfg.cuda: mod.cuda() ### moves to GPU
             opt = Optimizer(cfg, mod) #build Optimizer
-            sys.stderr.write('Learning [from scratch]...\n')
+            print_time('Learning [from scratch]...')
 
         trn = Dataset(par.trn, cfg.svoc, cfg.tvoc, par.batch_size, par.max_src_len, par.max_tgt_len, do_shuffle=True, do_filter=True)
         val = Dataset(par.val, cfg.svoc, cfg.tvoc, par.batch_size, par.max_src_len, par.max_tgt_len, do_shuffle=True, do_filter=True)
@@ -40,7 +41,7 @@ def main():
         cfg, mod, opt = chk.load(par.chk)
         cfg.update_par(par) ### updates cfg options with pars
         tst = Dataset(par.tst, cfg.svoc, cfg.tvoc, par.batch_size, 0, 0, do_shuffle=False, do_filter=False)
-        sys.stderr.write('Inference [It={}]...\n'.format(cfg.n_iters_sofar))
+        print_time('Inference [It={}]...'.format(cfg.n_iters_sofar))
         Inference(cfg, mod, tst)
 
 if __name__ == "__main__":

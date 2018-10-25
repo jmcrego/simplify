@@ -31,38 +31,17 @@ class Attention(nn.Module):
     def forward(self, dec_hidden, enc_outputs):
         #print("dec_hidden={}".format(dec_hidden.shape)) #[B, H]
         #print("enc_outputs={}".format(enc_outputs.shape)) #[S, B, H]
-        S = enc_outputs.size(0)
-        B = enc_outputs.size(1)
-        # Create variable to store attention energies
-
-#        print_time('attn_energies before')
-        # (B, 1, H) x (B, H, S) --> (B, 1, S)
-        attn_energies = torch.bmm(dec_hidden.unsqueeze(1), enc_outputs.permute(1,2,0))
-        attn_energies = attn_energies.squeeze(1) # [B, S]
-
-
-#        attn_energies = Variable(torch.zeros(B, S)) # [B, S]
-#        if self.cuda: attn_energies = attn_energies.cuda()
-#        print_time('attn_energies before')
-#        for b in range(B): #for all batches
-#            for j in range(S): # Calculate energy for each enc_output (referred to each source word)
-#                attn_energies[b, j] = self.score(dec_hidden[b], enc_outputs[j, b])
-#        print_time('attn_energies after')
+        if self.method == 'dot':
+            attn_energies = torch.bmm(dec_hidden.unsqueeze(1), enc_outputs.permute(1,2,0)) # (B, 1, H) x (B, H, S) --> (B, 1, S)
+            attn_energies = attn_energies.squeeze(1) # [B, S]
+        elif self.method == 'general':
+            enc_output = self.attn(enc_output)
+            attn_energies = torch.bmm(dec_hidden.unsqueeze(1), enc_outputs.permute(1,2,0)) # (B, 1, H) x (B, H, S) --> (B, 1, S)
+            attn_energies = attn_energies.squeeze(1) # [B, S]
+        elif self.method == 'concat':
+            attn_energies = self.attn(torch.cat((dec_hidden, enc_output), 1))
+            attn_energies = self.v.dot(both)
 
         # Normalize energies to weights in range 0 to 1
         attn_energies_norm = F.softmax(attn_energies, dim=1)
         return attn_energies_norm #[B, S]
-
-    def score(self, dec_hidden, enc_output):
-        #print("dec_hidden={}".format(dec_hidden.shape)) #[1, H]
-        #print("enc_output={}".format(enc_output.shape)) #[1, H]
-        if self.method == 'dot':
-            energy = dec_hidden.dot(enc_output)
-        elif self.method == 'general':
-            energy = self.attn(enc_output)
-            energy = dec_hidden.dot(energy)
-        elif self.method == 'concat':
-            energy = self.attn(torch.cat((dec_hidden, enc_output), 1))
-            energy = self.v.dot(energy)
-        #print("energy={}".format(energy)) #value
-        return energy

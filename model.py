@@ -34,7 +34,5 @@ class Model(nn.Module):
 
     def forward(self, src_batch, tgt_batch, len_src_batch, len_tgt_batch, teacher_forcing=1.0):
         enc_outputs, enc_final = self.encoder(src_batch,len_src_batch)
-        print_time('forward encoder')
         dec_outputs, dec_output_words = self.decoder(tgt_batch, enc_final, enc_outputs, teacher_forcing)
-        print_time('forward decoder')
         return dec_outputs, dec_output_words

@@ -6,6 +6,7 @@ import shutil
 import torch
 from model import Model
 from optim import Optimizer
+from utils import print_time
 
 class Checkpoint(object):
 
@@ -21,7 +22,7 @@ class Checkpoint(object):
         checkpoint = os.path.join(self.path, 'checkpoint_{}_{:0>6}_{}.pt'.format(date_time,cfg.n_iters_sofar,"{:.5f}".format(loss)[0:7]))
         chk = {'mod': mod.state_dict(), 'opt': opt.state_dict(), 'cfg': cfg}
         torch.save(chk, checkpoint) 
-        sys.stderr.write("Saved checkpoint [{}]\n".format(checkpoint))
+        print_time("Saved checkpoint [{}]".format(checkpoint))
 
     def load(self, name=None):
         if name is None:
@@ -42,7 +43,7 @@ class Checkpoint(object):
         ### load optimizer
         opt = Optimizer(cfg,mod)
         opt.optimizer.load_state_dict(chk['opt'])
-        sys.stderr.write("Loaded It={} {}\n".format(cfg.n_iters_sofar,checkpoint)) 
+        print_time("Loaded It={} {}".format(cfg.n_iters_sofar,checkpoint)) 
         return cfg, mod, opt
 
     def contains_model(self):
