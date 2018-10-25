@@ -118,6 +118,8 @@ class Dataset():
     def __init__(self, file, svoc, tvoc, batch_size, max_src_len, max_tgt_len, do_shuffle, do_filter, is_test):
         if file is None: return
         self.is_test = is_test
+        self.do_shuffle = shuffle
+        self.do_filter = do_filter
         self.file = file
         self.batch_size = batch_size
         self.max_src_len = max_src_len
