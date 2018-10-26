@@ -33,9 +33,13 @@ class Training():
             opt.step()
             cfg.n_iters_sofar += 1 
             Iter += 1
-            if Iter % cfg.par.print_every == 0: print_time('TRAIN iter:{} lr={:.5f} loss={:.4f}'.format(cfg.n_iters_sofar,lr,loss_total_N_iters/cfg.par.print_every))
-            if Iter % cfg.par.valid_every == 0: lr = self.validation(cfg, mod, opt, val, chk)
+            if Iter % cfg.par.print_every == 0: 
+                print_time('TRAIN iter:{} lr={:.5f} loss={:.4f}'.format(cfg.n_iters_sofar,lr,loss_total_N_iters/cfg.par.print_every))
+                loss_total_N_iters = 0
+            if Iter % cfg.par.valid_every == 0: 
+                lr = self.validation(cfg, mod, opt, val, chk)
             if Iter >= cfg.par.n_iters: break
+
         print_time('End of TRAIN seconds={:.2f}'.format(time.time() - ini_time))
 
 
