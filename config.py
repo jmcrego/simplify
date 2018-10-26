@@ -2,6 +2,7 @@
 
 import yaml
 import sys
+import torch
 from data import Vocab
 
 class Config():
@@ -26,7 +27,7 @@ class Config():
 
         with open(file, 'r') as stream: opts = yaml.load(stream)
         for o,v in opts.items():
-            if   o=="cuda":          self.cuda = bool(v)
+            if   o=="cuda":          self.cuda = bool(v) and torch.cuda.is_available()
             elif o=="cell":          self.cell = v.lower()
             elif o=="reuse_words":   self.reuse_words = bool(v)
             elif o=="num_layers":    self.num_layers = int(v)

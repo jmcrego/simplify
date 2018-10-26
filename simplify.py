@@ -3,6 +3,7 @@
 
 import sys
 import torch
+import random
 from optim import Optimizer
 from config import Config, Params
 from model import Model
@@ -15,17 +16,19 @@ from utils import print_time
 def main():
 
     par = Params(sys.argv)
+    random.seed(par.seed)
     torch.manual_seed(par.seed)
+    if torch.cuda.is_available(): torch.cuda.manual_seed_all(par.seed)
 
     if par.trn and par.val:
         chk = Checkpoint(par.dir)
 
-        if chk.contains_model: ####### resume training ####################
+        if chk.contains_model: ####### resume training ####################################
             cfg, mod, opt = chk.load() ### also moves to GPU if cfg.cuda
             cfg.update_par(par) ### updates par in cfg
             print_time('Learning [resume It={}]...'.format(cfg.n_iters_sofar))
 
-        else: ######## training from scratch ##############################
+        else: ######################## training from scratch ##############################
             cfg = Config(par) ### reads cfg and par (reads vocabularies)
             mod = Model(cfg)
             if cfg.cuda: mod.cuda() ### moves to GPU
@@ -36,7 +39,7 @@ def main():
         val = Dataset(par.val, cfg.svoc, cfg.tvoc, par.batch_size, par.max_src_len, par.max_tgt_len, do_shuffle=True, do_filter=True, is_test=True)
         Training(cfg, mod, opt, trn, val, chk)
 
-    elif par.tst: ######## inference ######################################
+    elif par.tst: #################### inference ###########################################
         chk = Checkpoint()
         cfg, mod, opt = chk.load(par.chk)
         cfg.update_par(par) ### updates cfg options with pars

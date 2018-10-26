@@ -19,7 +19,6 @@ class Training():
         ###############################
         # loop over training batchs ###
         ###############################
-#        curr_time = time.strftime("[%Y-%m-%d_%X]", time.localtime())    
         print_time('Start TRAIN')
         lr = cfg.par.lr
         trn_loss_total = 0  # Reset every print_every
@@ -46,29 +45,34 @@ class Training():
             # validation on validset ###
             ############################
             if trn_iter > 0 and trn_iter % cfg.par.valid_every == 0:
-                print_time('Start VALID')
-                val_loss_total = 0
-                val_iter = 0
-                for (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch, len_tgt_batch) in val.minibatches():
-                    if cfg.cuda:
-                        src_batch = src_batch.cuda()
-                        tgt_batch = tgt_batch.cuda()
-                        ref_batch = ref_batch.cuda()
-                    dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward  returns: [S,B,V] [S,B]
-                    loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad) #loss normalized by word
-                    val_loss_total += loss.item() #loss normalyzed by word
-                    val_iter += 1
-                #update learning rate
-                lr = opt.update_lr(val_loss_total)
-                if val_iter > 0:
-                    print_time('VALID iter:{} loss={:.4f}'.format(cfg.n_iters_sofar, val_loss_total/val_iter))
-                    chk.save(cfg, mod, opt, val_loss_total/val_iter)
+                lr = self.validation(cfg, mod, opt, val, chk)
             ############################
             # end if reached n_iters ###
             ############################
-            if trn_iter >= cfg.par.n_iters: break
+            if trn_iter >= cfg.par.n_iters: 
+                break
+        print_time('End of TRAIN seconds={:.2f}'.format(time.time() - ini_time))
 
-        seconds = "{:.2f}".format(time.time() - ini_time)
-        print_time('End of TRAIN iters_done={} iters_todo={} seconds={}'.format(trn_iter, cfg.par.n_iters, seconds))
+
+    def validation(self, cfg, mod, opt, val, chk):
+        print_time('Start VALID')
+        val_loss_total = 0
+        val_iter = 0
+        for (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch, len_tgt_batch) in val.minibatches():
+            if cfg.cuda:
+                src_batch = src_batch.cuda()
+                tgt_batch = tgt_batch.cuda()
+                ref_batch = ref_batch.cuda()
+            dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward  returns: [S,B,V] [S,B]
+            loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad) #loss normalized by word
+            val_loss_total += loss.item() #loss normalyzed by word
+            val_iter += 1
+        #update learning rate
+        lr = opt.update_lr(val_loss_total)
+        if val_iter > 0:
+            print_time('VALID iter:{} loss={:.4f}'.format(cfg.n_iters_sofar, val_loss_total/val_iter))
+            chk.save(cfg, mod, opt, val_loss_total/val_iter)
+        return lr
+
 
 
