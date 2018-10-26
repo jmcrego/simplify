@@ -5,8 +5,9 @@ import os
 import time
 import torch
 
-def print_time(desc, milli=False):
-	torch.cuda.synchronize()
+def print_time(desc, cuda=False, milli=False):
+	if cuda: 
+		torch.cuda.synchronize()
 	if not milli: 
 		curr_time = time.strftime("%Y-%m-%d_%X", time.localtime())
 	else:

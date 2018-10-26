@@ -1,6 +1,6 @@
-cuda: Fals
+cuda: False
 cell: 'lstm'
-num_layers: 2
+num_layers: 1
 bidirectional: True
 hidden_size: 4
 emb_src_size: 8

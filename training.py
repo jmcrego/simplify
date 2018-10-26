@@ -32,11 +32,11 @@ class Training():
             #######################
             # learn on trainset ###
             #######################
-            dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) # forward
-            loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad) # Get loss
-            trn_loss_total += loss.item()
+            dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) # forward returns: [S,B,V] [S,B]
+            loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad, reduction='none')#tensor with loss word by word
+            trn_loss_total += (loss.sum()/len(src_batch)) #loss normalyzed by sentence
             mod.zero_grad() # reset gradients
-            loss.backward() # Backward propagation
+            loss.sum().backward() # Backward propagation
             opt.step()
             cfg.n_iters_sofar += 1 
             trn_iter += 1
@@ -54,9 +54,9 @@ class Training():
                         src_batch = src_batch.cuda()
                         tgt_batch = tgt_batch.cuda()
                         ref_batch = ref_batch.cuda()
-                    dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward
-                    loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad)
-                    val_loss_total += loss.item()
+                    dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward  returns: [S,B,V] [S,B]
+                    loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad, reduction='none')#tensor with loss word by word
+                    val_loss_total += (loss.sum()/len(src_batch)) #loss normalyzed by sentence
                     val_iter += 1
                 #update learning rate
                 lr = opt.update_lr(val_loss_total)
