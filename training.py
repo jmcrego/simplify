@@ -16,48 +16,33 @@ class Training():
     def __init__(self, cfg, mod, opt, trn, val, chk):
         if cfg.n_iters_sofar is None: cfg.n_iters_sofar = 0
         ini_time = time.time()
-        ###############################
-        # loop over training batchs ###
-        ###############################
         print_time('Start TRAIN')
         lr = cfg.par.lr
-        trn_loss_total = 0  # Reset every print_every
-        trn_iter = 0
+        loss_total_N_iters = 0  # Reset every print_every
+        Iter = 0
         for (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch, len_tgt_batch) in trn.minibatches():
             if cfg.cuda:
                 src_batch = src_batch.cuda()
                 tgt_batch = tgt_batch.cuda()
                 ref_batch = ref_batch.cuda()
-            #######################
-            # learn on trainset ###
-            #######################
             dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) # forward returns: [S,B,V] [S,B]
-            loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad) #loss normalized by word
-            trn_loss_total += loss.item() #loss normalyzed by word
+            loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad, reduce='none') #loss normalized by word
+            loss_total_N_iters += loss.item() #loss normalyzed by word
             mod.zero_grad() # reset gradients
             loss.backward() # Backward propagation
             opt.step()
             cfg.n_iters_sofar += 1 
-            trn_iter += 1
-            if trn_iter > 0 and trn_iter % cfg.par.print_every == 0:
-                print_time('TRAIN iter:{} lr={:.5f} loss={:.4f}'.format(cfg.n_iters_sofar,lr,trn_loss_total/trn_iter))
-            ############################
-            # validation on validset ###
-            ############################
-            if trn_iter > 0 and trn_iter % cfg.par.valid_every == 0:
-                lr = self.validation(cfg, mod, opt, val, chk)
-            ############################
-            # end if reached n_iters ###
-            ############################
-            if trn_iter >= cfg.par.n_iters: 
-                break
+            Iter += 1
+            if Iter % cfg.par.print_every == 0: print_time('TRAIN iter:{} lr={:.5f} loss={:.4f}'.format(cfg.n_iters_sofar,lr,loss_total_N_iters/cfg.par.print_every))
+            if Iter % cfg.par.valid_every == 0: lr = self.validation(cfg, mod, opt, val, chk)
+            if Iter >= cfg.par.n_iters: break
         print_time('End of TRAIN seconds={:.2f}'.format(time.time() - ini_time))
 
 
     def validation(self, cfg, mod, opt, val, chk):
         print_time('Start VALID')
-        val_loss_total = 0
-        val_iter = 0
+        loss_total = 0
+        Iter = 0
         for (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch, len_tgt_batch) in val.minibatches():
             if cfg.cuda:
                 src_batch = src_batch.cuda()
@@ -65,13 +50,13 @@ class Training():
                 ref_batch = ref_batch.cuda()
             dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward  returns: [S,B,V] [S,B]
             loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad) #loss normalized by word
-            val_loss_total += loss.item() #loss normalyzed by word
-            val_iter += 1
+            loss_total += loss.item() #loss normalyzed by word
+            Iter += 1
         #update learning rate
-        lr = opt.update_lr(val_loss_total)
-        if val_iter > 0:
-            print_time('VALID iter:{} loss={:.4f}'.format(cfg.n_iters_sofar, val_loss_total/val_iter))
-            chk.save(cfg, mod, opt, val_loss_total/val_iter)
+        lr = opt.update_lr(loss_total)
+        if Iter > 0:
+            print_time('VALID iter:{} loss={:.4f}'.format(cfg.n_iters_sofar, loss_total/Iter))
+            chk.save(cfg, mod, opt, loss_total/Iter)
         return lr
 
 
