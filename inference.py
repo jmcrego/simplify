@@ -8,8 +8,8 @@ from utils import print_time
 #from config import Config
 #from model import Model
 #from data import Dataset, Vocab, Embed
-#reload(sys)
-#sys.setdefaultencoding('utf8')
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 
 class Inference(): 
