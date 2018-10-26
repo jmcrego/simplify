@@ -8,6 +8,9 @@ from utils import print_time
 #from config import Config
 #from model import Model
 #from data import Dataset, Vocab, Embed
+reload(sys)
+sys.setdefaultencoding('utf8')
+
 
 class Inference(): 
 
@@ -31,5 +34,5 @@ class Inference():
             sentence = []
             for word_id in predict_sentence:
                 word = self.cfg.tvoc.get(int(word_id))
-                sentence.append("{}".format(word).encode("utf-8"))
+                sentence.append("{}".format(word))
             print(' '.join(sentence))
