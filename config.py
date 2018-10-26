@@ -89,29 +89,29 @@ class Params():
 +          -voc_tgt    FILE : target vocabulary FILE (needed when training from scratch)
            -emb_src    FILE : source embeddings FILE (when training from scratch)
            -emb_tgt    FILE : target embeddings FILE (when training from scratch)
-           -max_src_len INT : maximum length of source sentences [400]
-           -max_tgt_len INT : maximum length of target sentences [50]
+           -max_src_len INT : maximum length of source sentences [80]
+           -max_tgt_len INT : maximum length of target sentences [80]
            -n_iters     INT : number of iterations to run [10000]
            -dropout   FLOAT : dropout probability used on all layers [0.3]
            -lr        FLOAT : learning rate [1.0]
            -decay     FLOAT : decay [0.05]
-           -print_every INT : print information every INT iterations [1000]
-           -valid_every INT : validate and save every INT iterations [10000]
+           -print_every INT : print information every INT iterations [10]
+           -valid_every INT : validate and save every INT iterations [1000]
         INFERENCE:
-*          -chk        FILE : checkpoint file to load when testing (or used the last one)
+*          -chk        FILE : checkpoint file to load when testing (use the most recent otherwise)
 *          -tst        FILE : run inference over FILE
            -beam_size   INT : size of beam when decoding [5]""".format(argv.pop(0))
 
-        self.max_src_len = 100
-        self.max_tgt_len = 100
+        self.max_src_len = 80
+        self.max_tgt_len = 80
         self.n_iters = 10000
         self.beam_size = 5
-        self.batch_size = 16
+        self.batch_size = 32
         self.dropout = 0.3
         self.lr = 1.0
         self.decay = 0.05
-        self.print_every = 1
-        self.valid_every = 10
+        self.print_every = 10
+        self.valid_every = 1000
         self.seed = 12345
         self.cfg = None
         self.dir = None
