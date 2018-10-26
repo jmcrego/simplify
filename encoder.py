@@ -26,8 +26,9 @@ class EncoderRNN(nn.Module):
         self.hidden_size = cfg.hidden_size // num_directions
         self.input_size = self.embeddings.embedding_dim #embedding dimension
         ### rnn cell
-        if cfg.cell == "lstm": self.rnn = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers, dropout=cfg.par.dropout, batch_first=True, bidirectional=(num_directions==2))
-        elif cfg.cell == "gru": self.rnn = nn.GRU(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers, dropout=cfg.par.dropout, batch_first=True, bidirectional=(num_directions==2))
+        dropout = cfg.par.dropout if self.num_layers>1 else 0.0 #dropout option adds dropout after all but last recurrent layer, so non-zero dropout expects num_layers greater than 1
+        if cfg.cell == "lstm": self.rnn = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers, dropout=dropout, batch_first=True, bidirectional=(num_directions==2))
+        elif cfg.cell == "gru": self.rnn = nn.GRU(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers, dropout=dropout, batch_first=True, bidirectional=(num_directions==2))
         else: sys.exit("error: bad -cell {} option. Use: lstm OR gru\n".format(cfg.cell))
         ### bridge (not used)
         #self.total_hidden_dim = hidden_size * num_layers

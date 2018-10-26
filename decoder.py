@@ -28,8 +28,9 @@ class DecoderRNN_Attn(nn.Module):
         ### dropout layer to apply on top of the embedding layer
         self.dropout = nn.Dropout(cfg.par.dropout)
         ### set up the RNN
-        if cfg.cell == "lstm": self.rnn = nn.LSTM(self.E+self.H, self.H, self.L, dropout=cfg.par.dropout) #input is embedding+hidden (to allow feed-input)
-        elif cfg.cell == "gru": self.rnn = nn.GRU(self.E+self.H, self.H, self.L, dropout=cfg.par.dropout)
+        dropout = cfg.par.dropout if self.num_layers>1 else 0.0 #dropout option adds dropout after all but last recurrent layer, so non-zero dropout expects num_layers greater than 1
+        if cfg.cell == "lstm": self.rnn = nn.LSTM(self.E+self.H, self.H, self.L, dropout=dropout) #input is embedding+hidden (to allow feed-input)
+        elif cfg.cell == "gru": self.rnn = nn.GRU(self.E+self.H, self.H, self.L, dropout=dropout)
         else: sys.exit("error: bad -cell {} option. Use: lstm OR gru\n".format(cfg.cell))
         ### Attention mechanism
         self.attn = Attention(self.H, cfg.attention, cfg.cuda)
