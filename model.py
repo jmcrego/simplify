@@ -19,14 +19,13 @@ class Model(nn.Module):
 
     def __init__(self, cfg):
         super(Model, self).__init__()
-        self.cfg = cfg
 
-        self.embeddings_src = nn.Embedding(self.cfg.svoc.size, self.cfg.emb_src_size) ### embeddings for encoder
-        self.encoder = EncoderRNN(self.embeddings_src, self.cfg)
+        self.embeddings_src = nn.Embedding(cfg.svoc.size, cfg.emb_src_size) ### embeddings for encoder
+        self.encoder = EncoderRNN(self.embeddings_src, cfg)
 
-        if self.cfg.reuse_words: self.embeddings_tgt = self.embeddings_src ### same embeddings for encoder and decoder
-        else: self.embeddings_tgt = nn.Embedding(self.cfg.tvoc.size, self.cfg.emb_tgt_size) ### new embeddings for decoder
-        self.decoder = DecoderRNN_Attn(self.embeddings_tgt, self.cfg) 
+        if cfg.reuse_words: self.embeddings_tgt = self.embeddings_src ### same embeddings for encoder and decoder
+        else: self.embeddings_tgt = nn.Embedding(cfg.tvoc.size, cfg.emb_tgt_size) ### new embeddings for decoder
+        self.decoder = DecoderRNN_Attn(self.embeddings_tgt, cfg) 
 
         sys.stderr.write('Initializing model pars\n')
         for param in self.encoder.parameters(): param.data.uniform_(-0.08, 0.08)
