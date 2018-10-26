@@ -31,5 +31,5 @@ class Inference():
             sentence = []
             for word_id in predict_sentence:
                 word = self.cfg.tvoc.get(int(word_id))
-                sentence.append("{}".format(word).decode("utf-8"))
+                sentence.append("{}".format(word).encode("utf-8"))
             print(' '.join(sentence))
