@@ -198,12 +198,11 @@ class Dataset():
 
     def build_batch(self, SRC, TGT, RAW_SRC, RAW_TGT, max_src_batch, max_tgt_batch):
         len2entries = defaultdict(list)
-        src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch, len_tgt_batch = [], [], [], [], [], [], []
+        src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch = [], [], [], [], [], []
         for i in range(len(SRC)):
             raw_src = list(RAW_SRC[i])
             raw_tgt = list(RAW_TGT[i])
             len_src = len(SRC[i]) ### J
-            len_tgt = len(TGT[i]) ### I
             #### src: s1 s2 s3 ... sj ... sJ <pad> <pad> <pad> ...
             src = list(SRC[i])    
             while len(src) < max_src_batch: src.append(idx_pad)
@@ -217,7 +216,7 @@ class Dataset():
             ref.extend([idx_end])
             while len(ref) < max_tgt_batch + 1: ref.append(idx_pad) 
             ### batch entries have to be sorted in length decreasing order
-            len2entries[len_src].append([src,tgt,ref,len_src,len_tgt,raw_src,raw_tgt])
+            len2entries[len_src].append([src,tgt,ref,len_src,raw_src,raw_tgt])
 
         ### batch entries have to be sorted in length decreasing order
         for l,entries in sorted(len2entries.items(), reverse=True):
@@ -226,10 +225,9 @@ class Dataset():
                 tgt_batch.append(entry[1])
                 ref_batch.append(entry[2])
                 len_src_batch.append(entry[3])
-                len_tgt_batch.append(entry[4])
-                raw_src_batch.append(entry[5])
-                raw_tgt_batch.append(entry[6])
-        return torch.tensor(src_batch), torch.tensor(tgt_batch), torch.tensor(ref_batch), raw_src_batch, raw_tgt_batch, torch.tensor(len_src_batch), torch.tensor(len_tgt_batch)
+                raw_src_batch.append(entry[4])
+                raw_tgt_batch.append(entry[5])
+        return torch.tensor(src_batch), torch.tensor(tgt_batch), torch.tensor(ref_batch), raw_src_batch, raw_tgt_batch, torch.tensor(len_src_batch)
 
     def __len__(self):
         return self.length

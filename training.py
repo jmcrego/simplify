@@ -20,12 +20,12 @@ class Training():
         lr = cfg.par.lr
         loss_total_N_iters = 0  # Reset every print_every
         Iter = 0
-        for (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch, len_tgt_batch) in trn.minibatches():
+        for (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch) in trn.minibatches():
             if cfg.cuda:
                 src_batch = src_batch.cuda()
                 tgt_batch = tgt_batch.cuda()
                 ref_batch = ref_batch.cuda()
-            dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) # forward returns: [S,B,V] [S,B]
+            dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch) # forward returns: [S,B,V] [S,B]
             loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad) #loss normalized by word
             loss_total_N_iters += loss.item() 
             mod.zero_grad() # reset gradients
@@ -48,12 +48,12 @@ class Training():
         print_time('Start VALID')
         loss_total = 0
         Iter = 0
-        for (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch, len_tgt_batch) in val.minibatches():
+        for (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch) in val.minibatches():
             if cfg.cuda:
                 src_batch = src_batch.cuda()
                 tgt_batch = tgt_batch.cuda()
                 ref_batch = ref_batch.cuda()
-            dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward  returns: [S,B,V] [S,B]
+            dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch) ### forward  returns: [S,B,V] [S,B]
             loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad) #loss normalized by word
             loss_total += loss.item()
             Iter += 1

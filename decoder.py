@@ -46,7 +46,7 @@ class DecoderRNN_Attn(nn.Module):
         self.S = tgt_batch.shape[1] #seq_size
         tgt_batch = tgt_batch.transpose(1,0) #tgt_batch is [S, B]
         ### these are the output vectors that will be filled at the end of the loop
-        dec_output_words = torch.zeros([self.S - 1, self.B], dtype=torch.int32) #[S-1, B]
+        dec_output_words = torch.zeros([self.S - 1, self.B], dtype=torch.int64) #[S-1, B]
         dec_outputs = torch.zeros([self.S - 1, self.B, self.V], dtype=torch.float32) #[S-1, B, V]
         if self.cuda: 
             dec_output_words = dec_output_words.cuda()
