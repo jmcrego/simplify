@@ -26,7 +26,7 @@ class Training():
                 tgt_batch = tgt_batch.cuda()
                 ref_batch = ref_batch.cuda()
             dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) # forward returns: [S,B,V] [S,B]
-            loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad, reduce='none') #loss normalized by word
+            loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad) #loss normalized by word
             loss_total_N_iters += loss.item() #loss normalyzed by word
             mod.zero_grad() # reset gradients
             loss.backward() # Backward propagation
