@@ -27,7 +27,7 @@ class Training():
                 ref_batch = ref_batch.cuda()
             dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) # forward returns: [S,B,V] [S,B]
             loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad) #loss normalized by word
-            loss_total_N_iters += loss.item() #loss normalyzed by word
+            loss_total_N_iters += loss.item() 
             mod.zero_grad() # reset gradients
             loss.backward() # Backward propagation
             opt.step()
@@ -37,13 +37,14 @@ class Training():
                 print_time('TRAIN iter:{} lr={:.5f} loss={:.4f}'.format(cfg.n_iters_sofar,lr,loss_total_N_iters/cfg.par.print_every))
                 loss_total_N_iters = 0
             if Iter % cfg.par.valid_every == 0: 
-                lr = self.validation(cfg, mod, opt, val, chk)
-            if Iter >= cfg.par.n_iters: break
+                lr = self.validate(cfg, mod, opt, val, chk)
+            if Iter >= cfg.par.n_iters: 
+                break
 
         print_time('End of TRAIN seconds={:.2f}'.format(time.time() - ini_time))
 
 
-    def validation(self, cfg, mod, opt, val, chk):
+    def validate(self, cfg, mod, opt, val, chk):
         print_time('Start VALID')
         loss_total = 0
         Iter = 0
@@ -54,7 +55,7 @@ class Training():
                 ref_batch = ref_batch.cuda()
             dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward  returns: [S,B,V] [S,B]
             loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad) #loss normalized by word
-            loss_total += loss.item() #loss normalyzed by word
+            loss_total += loss.item()
             Iter += 1
         #update learning rate
         lr = opt.update_lr(loss_total)

@@ -57,19 +57,12 @@ class Config():
         self.out()
 
     def out(self):
-        sys.stderr.write("CFG:")
-        is_First = True
+        CFG = []
         for k, v in sorted(vars(self).items()): 
-            if (k!='par' and k!='svoc' and k!='tvoc'): 
-                if not is_First: 
-                    sys.stderr.write(",")
-                    is_First = False
-                sys.stderr.write(" {}: {}".format(k,v))
-        sys.stderr.write("\n")
-        sys.stderr.write("SVOC: size: {}\n".format(self.svoc.size))
-        if self.reuse_words: sys.stderr.write("TVOC: reuse\n")
-        else: sys.stderr.write("TVOC: size: {}\n".format(self.tvoc.size))
-        self.par.out()
+            if k!='svoc' and k!='tvoc' and k!='par': CFG.append('{}: {}'.format(k,v))
+        sys.stderr.write("CFG: {}".format(', '.join([s for s in CFG]))+'\n')
+        sys.stderr.write('PAR: '+', '.join(['{0}: {1}'.format(k, v) for k,v in sorted(vars(self.par).items())])+'\n')
+        sys.stderr.write("VOC: {}, {}\n".format(self.svoc.size, 'reuse' if self.reuse_words else self.tvoc.size))
 
 
 
@@ -96,7 +89,7 @@ class Params():
            -dropout   FLOAT : dropout probability used on all layers [0.3]
            -lr        FLOAT : learning rate [1.0]
            -decay     FLOAT : decay [0.05]
-           -print_every INT : print information every INT iterations [10]
+           -print_every INT : log every INT iterations [10] (loss is normalized per tgt word)
            -valid_every INT : validate and save every INT iterations [1000]
         INFERENCE:
 *          -chk        FILE : checkpoint file to load when testing (use the most recent otherwise)
@@ -156,6 +149,4 @@ class Params():
         if self.trn and not self.val: sys.stderr.write('error: missing -val option\n{}\n'.format(usage))
         if self.tst and not self.chk: sys.stderr.write('error: missing -chk option\n{}\n'.format(usage))
 
-    def out(self):
-        sys.stderr.write("PAR: "+', '.join(['{0}: {1}'.format(k, v) for k,v in sorted(vars(self).items())])+"\n")
 
