@@ -30,9 +30,10 @@ class Inference():
 
 
     def display(self, predict_batch, src_batch):
-        for i in range(len(predict_batch)):
+        for b in range(len(predict_batch)):
             sentence = []
-            for word_id in predict_batch[i]:
+            for word_id in predict_batch[b]:
                 word = self.cfg.tvoc.get(int(word_id))
                 sentence.append("{}".format(word))
-            print(' '.join(sentence)+"\n"+' '.join(src_batch[i]))
+            print(' '.join(sentence))
+            print(src_batch[i])
