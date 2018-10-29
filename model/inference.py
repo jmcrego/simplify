@@ -4,12 +4,9 @@
 import sys
 import os
 import time
-from utils import print_time
-#from config import Config
-#from model import Model
-#from data import Dataset, Vocab, Embed
-reload(sys)
-sys.setdefaultencoding('utf8')
+from utils.utils import print_time
+#reload(sys)
+#sys.setdefaultencoding('utf8')
 
 
 class Inference(): 

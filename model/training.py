@@ -7,9 +7,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
-from optim import Optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from utils import print_time
+from model.optim import Optimizer
+from utils.utils import print_time
 
 class Training():
 

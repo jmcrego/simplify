@@ -3,7 +3,7 @@
 import yaml
 import sys
 import torch
-from data import Vocab
+from utils.data import Vocab
 
 class Config():
 

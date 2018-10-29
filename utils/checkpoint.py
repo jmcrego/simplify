@@ -4,9 +4,9 @@ import glob
 import time
 import shutil
 import torch
-from model import Model
-from optim import Optimizer
-from utils import print_time
+from model.model import Model
+from model.optim import Optimizer
+from utils.utils import print_time
 
 class Checkpoint(object):
 

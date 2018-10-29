@@ -9,9 +9,9 @@ import numpy as np
 from torch.autograd import Variable
 from torch.nn.utils.rnn import pack_padded_sequence
 from torch.nn.utils.rnn import pad_packed_sequence
-from data import idx_ini
-from attention import Attention
-from utils import print_time
+from model.attention import Attention
+from utils.data import idx_ini
+from utils.utils import print_time
 
 class DecoderRNN_Attn(nn.Module):
 
