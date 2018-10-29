@@ -36,4 +36,4 @@ class Inference():
                 word = self.cfg.tvoc.get(int(word_id))
                 sentence.append("{}".format(word))
             print(' '.join(sentence))
-            print(src_batch[i])
+            print(src_batch[b])
