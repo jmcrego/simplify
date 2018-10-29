@@ -4,14 +4,14 @@
 import sys
 import torch
 import random
-from optim import Optimizer
-from config import Config, Params
-from model import Model
-from data import Dataset, Vocab, Embed
-from training import Training
-from inference import Inference
-from checkpoint import Checkpoint
-from utils import print_time
+from utils.config import Config, Params
+from utils.data import Dataset, Vocab, Embed
+from utils.checkpoint import Checkpoint
+from utils.utils import print_time
+from model.optim import Optimizer
+from model.model import Model
+from model.training import Training
+from model.inference import Inference
 
 def main():
 
