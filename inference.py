@@ -23,16 +23,16 @@ class Inference():
                 src_batch = src_batch.cuda()
                 tgt_batch = tgt_batch.cuda()
             _, predict_batch = mod(src_batch, tgt_batch, len_src_batch) ### forward
-            self.display(predict_batch)
+            self.display(predict_batch, src_batch)
 
         seconds = "{:.2f}".format(time.time() - ini_time)
         print_time('End of TEST seconds={})\n'.format(seconds))
 
 
-    def display(self, predict_batch):
-        for predict_sentence in predict_batch:
+    def display(self, predict_batch, src_batch):
+        for i in range(len(predict_batch))
             sentence = []
-            for word_id in predict_sentence:
+            for word_id in predict_sentence[i]:
                 word = self.cfg.tvoc.get(int(word_id))
                 sentence.append("{}".format(word))
-            print(' '.join(sentence))
+            print(' '.join(sentence)+"\n"+' '.join(src_batch[i]))
