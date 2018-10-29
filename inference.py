@@ -22,17 +22,15 @@ class Inference():
             if cfg.cuda:
                 src_batch = src_batch.cuda()
                 tgt_batch = tgt_batch.cuda()
-            _, predict_batch = mod(src_batch, tgt_batch, len_src_batch) ### forward
-            self.display(predict_batch, src_batch)
-
-        seconds = "{:.2f}".format(time.time() - ini_time)
-        print_time('End of TEST seconds={})\n'.format(seconds))
+            _, hyp_batch = mod(src_batch, tgt_batch, len_src_batch) ### forward
+            self.display(hyp_batch, src_batch)
+        print_time('End of TEST seconds={:.2f})\n'.format(time.time() - ini_time))
 
 
-    def display(self, predict_batch, src_batch):
+    def display(self, hyp_batch, src_batch):
         for b in range(len(predict_batch)):
             target= []
-            for word_id in predict_batch[b]:
+            for word_id in hyp_batch[b]:
                 word = self.cfg.tvoc.get(int(word_id))
                 target.append("{}".format(word))
             print(' '.join(target))
