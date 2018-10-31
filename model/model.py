@@ -8,7 +8,7 @@ import sys
 
 from torch import optim
 from model.encoder import EncoderRNN
-from model.decoder import DecoderRNN, DecoderRNN_Attn
+from model.decoder import DecoderRNN_Attn
 from utils.utils import print_time
 
 ########################################################
