@@ -69,6 +69,13 @@ class Vocab():
         if s not in self.tok_to_idx: return idx_unk
         return self.tok_to_idx[s]
 
+    def get_list(self, lin):
+        lout = []
+        for s in lin: 
+            if s==idx_end or s==idx_pad: break
+            lout.append(self.get(s))
+        return lout
+
 ########################################################
 ### Embed ##############################################
 ########################################################
@@ -147,7 +154,7 @@ class Dataset():
             for index in indexs:
                 tokens = self.data[index].strip().split('\t')
                 if len(tokens) > 2 or len(tokens)<1:
-                    #sys.stderr.write("warning: bad data entry in line={} [skipped]\n".format(index+1))
+                    sys.stderr.write("warning: bad data entry in line={} [skipped]\n".format(index+1))
                     continue
                 ### filter out sentences not respecting limits
                 src, tgt = [], []
@@ -212,7 +219,7 @@ class Dataset():
             tgt.extend([idx_end])
             while len(tgt) < max_tgt_batch + 2: tgt.append(idx_pad) 
             #### ref: t1 t2 t3 ... ti ... tI <end> <pad> ...
-            ref = list(TGT[i]) 
+            ref = list(TGT[i])
             ref.extend([idx_end])
             while len(ref) < max_tgt_batch + 1: ref.append(idx_pad) 
             ### batch entries have to be sorted in length decreasing order

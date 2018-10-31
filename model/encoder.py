@@ -39,6 +39,7 @@ class EncoderRNN(nn.Module):
         #lengths: [batch_size]
         #print("src_batch={}".format(src_batch.shape)) 
         #print("lengths={}".format(lengths.shape)) 
+        #print("lengths are {}".format(lengths))
         ###
         ### embed inputs
         ###
@@ -54,34 +55,9 @@ class EncoderRNN(nn.Module):
         #or                  h = [num_layers*num_directions, batch_size, hidden_size]      
         #print("encoder_final = ({}, {})".format(encoder_final[0].shape, encoder_final[1].shape))
         outputs, _ = pad_packed_sequence(outputs) ### unpack and take only the outputs, discard the sequence length
-        #print("outputs={}".format(outputs.shape)) #outputs [len_seq, batch_size, hidden_size]
         #if isinstance(encoder_final, tuple): 
-        #    print("encoder_final[0]={}".format(encoder_final[0].shape)) #[num_layers*num_directions, batch_size, hidden_size/2]
-        #    print("encoder_final[1]={}".format(encoder_final[1].shape)) #[num_layers*num_directions, batch_size, hidden_size/2]
-        #else: print("encoder_final={}".format(encoder_final.shape)) #[num_layers*num_directions, batch_size, hidden_size/2]
-
-        return outputs, encoder_final ### outputs [len_seq, batch_size, hidden_size], encoder_final_states [num_layers*num_directions, batch_size, hidden_size/num_directions]
-
-        #### next is bridge (not used)
-
-        ### function to forward bridges
-        def fwd_bridge(linear, states):
-            size = states.size()
-            result = linear(states.view(-1, self.total_hidden_dim))
-            return F.relu(result).view(size)
-        ###
-        ### bridge for the final hidden states
-        ###
-        if isinstance(encoder_final, tuple): 
-            ### LSTM
-            h = fwd_bridge(self.bridgelayers[0], encoder_final[0])
-            c = fwd_bridge(self.bridgelayers[1], encoder_final[1])
-            encoder_final = tuple([h,c]) # ([num_layers*num_directions, batch_size, hidden_size], [num_layers*num_directions, batch_size, hidden_size/2])
-            #print("encoder_final = h, c = ({}, {})".format(encoder_final[0].shape, encoder_final[1].shape)) 
-        else:  
-            ### GRU
-            encoder_final = fwd_bridge(self.bridgelayers[0], encoder_final) # h = [num_layers*num_directions, batch_size, hidden_size]
-            #print("encoder_final = h = {}".format(encoder_final.shape))
-
-        return outputs, encoder_final ### outputs [len_seq, batch_size, hidden_size], encoder_final_states [num_layers*num_directions, batch_size, hidden_size/num_directions]
+        #    print("encoder_final[0]={}".format(encoder_final[0].shape)) #[num_layers*num_directions, batch_size, hidden_size/num_directions]
+        #    print("encoder_final[1]={}".format(encoder_final[1].shape)) #[num_layers*num_directions, batch_size, hidden_size/num_directons]
+        #else: print("encoder_final={}".format(encoder_final.shape)) #[num_layers*num_directions, batch_size, hidden_size/num_directions]
+        return outputs, encoder_final ### outputs [S, B, H], encoder_final_states [L*num_directions, B, H/num_directions]
 

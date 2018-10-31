@@ -42,7 +42,8 @@ class Config():
             elif o=="max_grad_norm": self.max_grad_norm = float(v)
             else: sys.exit("error: unparsed {} config option.".format(o))
 
-        if self.par.voc_src is None: sys.exit('error: missing -voc_src option\n')
+        if self.par.voc_src is None: sys.exit('error: missing -voc_src option')
+        if self.coverage and self.attention != 'concat': sys.exit('error: option coverage must be used with attention: \'concat\'')
         self.svoc = Vocab(self.par.voc_src)
         if self.reuse_words:
             self.tvoc = self.svoc

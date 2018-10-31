@@ -15,6 +15,7 @@ class Optimizer(object):
         self.cfg = cfg
         if cfg.method == "adam":  self.optimizer = torch.optim.Adam(mod.parameters(), lr=cfg.par.lr)
         elif cfg.method == "sgd": self.optimizer = torch.optim.SGD(mod.parameters(), lr=cfg.par.lr)
+        elif cfg.method == "adadelta": self.optimizer = torch.optim.Adadelta(mod.parameters())
         else: sys.exit("error: bad -method {} option. Use: adam OR sgd\n".format(cfg.method))
         self.scheduler = ReduceLROnPlateau(self.optimizer, factor=cfg.par.decay, verbose=True)
 

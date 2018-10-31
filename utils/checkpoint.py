@@ -19,7 +19,7 @@ class Checkpoint(object):
         if not os.path.exists(self.path): os.makedirs(self.path)
         date_time = time.strftime('%Y%m%d-%H%M%S', time.localtime())
         checkpoint = os.path.join(self.path, 'checkpoint_{}_{:0>6}_{}.pt'.format(date_time,cfg.n_iters_sofar,"{:.5f}".format(loss)[0:7]))
-        chk = {'mod': mod.state_dict(), 'opt': opt.state_dict(), 'cfg': cfg}
+        chk = {'mod_state': mod.state_dict(), 'opt_state': opt.state_dict(), 'cfg': cfg}
         torch.save(chk, checkpoint) 
         print_time("Saved checkpoint [{}]".format(checkpoint))
 
@@ -37,11 +37,12 @@ class Checkpoint(object):
         cfg = chk['cfg'] 
         ### load model
         mod = Model(cfg)
-        mod.load_state_dict(chk['mod'])
+        mod.load_state_dict(chk['mod_state'])
         if cfg.cuda: mod.cuda() ### move to GPU
         ### load optimizer
         opt = Optimizer(cfg,mod)
-        opt.optimizer.load_state_dict(chk['opt'])
+        opt.optimizer.load_state_dict(chk['opt_state'])
+
         print_time("Loaded It={} {}".format(cfg.n_iters_sofar,checkpoint)) 
         return cfg, mod, opt
 
