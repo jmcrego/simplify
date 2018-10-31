@@ -13,6 +13,10 @@ from model.model import Model
 from model.training import Training
 from model.inference import Inference
 
+import torch.nn as nn
+import torch.nn.functional as F
+
+
 def main():
 
     par = Params(sys.argv)

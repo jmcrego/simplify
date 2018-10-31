@@ -1,11 +1,11 @@
 cuda: False
 cell: 'lstm'
-num_layers: 1
+num_layers: 3
 bidirectional: True
-hidden_size: 4
-emb_src_size: 8
+hidden_size: 8
+emb_src_size: 16
 reuse_words: True
-attention: 'dot'
+attention: 'concat'
 coverage: False
 pointer: False
 method: 'adam'
