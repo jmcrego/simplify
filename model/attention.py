@@ -33,6 +33,7 @@ class Attention(nn.Module):
                 self.W_s.cuda()
                 self.v.cuda()
                 if coverage: self.W_c.cuda()
+
         else: sys.exit("error: bad attention method {} option. Use: dot OR general OR concat\n".format(method))
 
 
@@ -51,14 +52,17 @@ class Attention(nn.Module):
             context = context.permute(1,2,0) #[B,H,S]
             scores = torch.bmm(query, context).squeeze(1) # [B,1,H] x [B,H,S] --> [B,1,S] --> [B,S]
 
-        else: ### concat
+        else: 
+            ### context
             context = context.permute(1,0,2) #[B,S,H]
             context = context.contiguous().view(-1, H) #[B*S,H]
             context = self.W_h(context) 
+            ### query
             query = self.W_s(query) #query [B, H]
             query = query.unsqueeze(1).expand(B, S, H) #[B, 1, H] => [B, S, H]
             query = query.contiguous().view(-1, H) # [B*S,H]
             scores = context + query # [B*S,H]
+            ### coverage
             if coverage is not None:
                 coverage = coverage.view(-1, 1) # [B*S,1] enc_coverage is None or the sum over the previous attention vectors [B,S]
                 coverage = self.W_c(coverage) # [B*S,H]
