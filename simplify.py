@@ -43,7 +43,7 @@ def main():
         val = Dataset(par.val, cfg.svoc, cfg.tvoc, par.batch_size, par.max_src_len, par.max_tgt_len, do_shuffle=True, do_filter=True, is_test=True)
         Training(cfg, mod, opt, trn, val, chk)
 
-    elif par.tst: #################### inference ###########################################
+    elif par.tst: #################### inference ##########################################
         chk = Checkpoint()
         cfg, mod, opt = chk.load(par.chk)
         cfg.update_par(par) ### updates cfg options with pars

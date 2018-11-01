@@ -17,47 +17,36 @@ class EncoderRNN(nn.Module):
 
     def __init__(self, embeddings, cfg): #rnn_type, num_layers, bidirectional, hidden_size, dropout):
         super(EncoderRNN, self).__init__()
-        num_of_states = 2 if cfg.cell == "lstm" else 1
-        num_directions = 2 if cfg.bidirectional else 1
+        self.embeddings = embeddings # [V x E]
+        self.D = 2 if cfg.bidirectional else 1
         ### if bidirectional the number of hidden_size (units) is divided by 2 for each direction
-        if cfg.hidden_size % num_directions != 0: sys.exit('error: hidden units {} must be an even number'.format(cfg.hidden_size)) 
-        self.embeddings = embeddings # [voc_length x input_size]
-        self.num_layers = cfg.num_layers
-        self.hidden_size = cfg.hidden_size // num_directions
-        self.input_size = self.embeddings.embedding_dim #embedding dimension
+        if cfg.hidden_size % self.D != 0: sys.exit('error: hidden units {} must be an even number'.format(cfg.hidden_size)) 
+        self.H = cfg.hidden_size // self.D
+        self.L = cfg.num_layers
+        self.E = self.embeddings.embedding_dim #embedding dimension
+        self.V = self.embeddings.num_embeddings #vocabulary size
         ### rnn cell
-        dropout = cfg.par.dropout if self.num_layers>1 else 0.0 #dropout option adds dropout after all but last recurrent layer, so non-zero dropout expects num_layers greater than 1
-        if cfg.cell == "lstm": self.rnn = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers, dropout=dropout, batch_first=True, bidirectional=(num_directions==2))
-        elif cfg.cell == "gru": self.rnn = nn.GRU(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers, dropout=dropout, batch_first=True, bidirectional=(num_directions==2))
+        dropout = cfg.par.dropout if self.L>1 else 0.0 #dropout option adds dropout after all but last recurrent layer, so non-zero dropout expects num_layers greater than 1
+        if cfg.cell == "lstm": self.rnn = nn.LSTM(input_size=self.E, hidden_size=self.H, num_layers=self.L, dropout=dropout, batch_first=True, bidirectional=(self.D==2))
+        elif cfg.cell == "gru": self.rnn = nn.GRU(input_size=self.E, hidden_size=self.H, num_layers=self.L, dropout=dropout, batch_first=True, bidirectional=(self.D==2))
         else: sys.exit("error: bad -cell {} option. Use: lstm OR gru\n".format(cfg.cell))
-        ### bridge (not used)
-        #self.total_hidden_dim = hidden_size * num_layers
-        #self.bridgelayers = nn.ModuleList([nn.Linear(self.total_hidden_dim, self.total_hidden_dim, bias=True) for _ in range(num_of_states)]) ### there will be 1:GRU or 2:LSTM Linear layers
 
-    def forward(self, src_batch, lengths):
-        #src_batch: [batch_size, seq_len]
-        #lengths: [batch_size]
-        #print("src_batch={}".format(src_batch.shape)) 
-        #print("lengths={}".format(lengths.shape)) 
-        #print("lengths are {}".format(lengths))
-        ###
+    def forward(self, src_batch, len_src_batch):
+        #print("src_batch={}".format(src_batch.shape)) #[B, S]
+        #print("len_src_batch={}".format(len_src_batch.shape)) #[B]
+        B = src_batch.size(0)
+        S = src_batch.size(1)
         ### embed inputs
-        ###
-        input_emb = self.embeddings(src_batch)
-        #input_emb [batch_size, len_seq, emb_size]
-        #print("input_emb={}".format(input_emb.shape)) 
-        packed_emb = pack_padded_sequence(input_emb, lengths, batch_first=True)
-        ###
+        input_emb = self.embeddings(src_batch) #[B,S,E]
+        packed_emb = pack_padded_sequence(input_emb, len_src_batch, batch_first=True)
         ### rnn
-        ###
         outputs, encoder_final = self.rnn(packed_emb)
-        #encoder_final = (h,c) = ([num_layers*num_directions, batch_size, hidden_size], [num_layers*num_directions, batch_size, hidden_size])
-        #or                  h = [num_layers*num_directions, batch_size, hidden_size]      
-        #print("encoder_final = ({}, {})".format(encoder_final[0].shape, encoder_final[1].shape))
         outputs, _ = pad_packed_sequence(outputs) ### unpack and take only the outputs, discard the sequence length
-        #if isinstance(encoder_final, tuple): 
-        #    print("encoder_final[0]={}".format(encoder_final[0].shape)) #[num_layers*num_directions, batch_size, hidden_size/num_directions]
-        #    print("encoder_final[1]={}".format(encoder_final[1].shape)) #[num_layers*num_directions, batch_size, hidden_size/num_directons]
-        #else: print("encoder_final={}".format(encoder_final.shape)) #[num_layers*num_directions, batch_size, hidden_size/num_directions]
-        return outputs, encoder_final ### outputs [S, B, H], encoder_final_states [L*num_directions, B, H/num_directions]
+        #outputs [S, B, H]
+        #encoder_final is either:
+        # (h,c) = ([L*D, B, H], [L*D, B, H])
+        # or  h = [L*D, B, H]      
+        return outputs, encoder_final
+
+
 

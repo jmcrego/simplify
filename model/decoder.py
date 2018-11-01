@@ -44,22 +44,24 @@ class DecoderRNN_Attn(nn.Module):
         self.output = nn.Linear(self.H, self.V)
 
     def forward(self, tgt_batch, enc_final, enc_outputs, teacher_forcing):
-        #print("forward")
-        #tgt_batch is [B, S]
+        # tgt_batch [B, T]
+        # encoder_final is either:
+        #  (h,c) = ([L*D, B, H/D], [L*D, B, H/D]) => if LSTM
+        #  or  h = [L*D, B, H/D] => if GRU
+        # enc_outputs [S,B,H]
         self.S = enc_outputs.shape[0] #source seq_size
         self.T = tgt_batch.shape[1] #target seq_size
         self.B = tgt_batch.shape[0] #batch_size
-        #print("decoder fwd B={} S={} H={}".format(self.B, self.S, self.H))
-
-        tgt_batch = tgt_batch.transpose(1,0) #tgt_batch is [S, B]
         ### these are the output vectors that will be filled at the end of the loop
         dec_output_words = torch.zeros([self.T-1, self.B], dtype=torch.int64) #[T-1, B]
         dec_outputs = torch.zeros([self.T-1, self.B, self.V], dtype=torch.float32) #[T-1, B, V]
         if self.cuda: 
             dec_output_words = dec_output_words.cuda()
             dec_outputs = dec_outputs.cuda()
+        ### tgt_batch must be seq_len x batch
+        tgt_batch = tgt_batch.transpose(1,0) # [T,B]
         ### initialize dec_hidden (with dec_final)
-        dec_hidden = self.init_state(enc_final) #[L, B, D*dim] #dim is H/2
+        dec_hidden = self.init_state(enc_final) #([L,B,H], [L,B,H])
         ### initialize attn_hidden (Eq 5 in Luong) used for input-feeding
         attn_hidden = Variable(torch.zeros(1, self.B, self.H)) #[1, B, H]
         if self.cuda: 
@@ -69,58 +71,61 @@ class DecoderRNN_Attn(nn.Module):
         if self.coverage:
             enc_coverage = torch.zeros([self.B, self.S], dtype=torch.float32) #[B, S]
             if self.cuda: enc_coverage = enc_coverage.cuda()
-
+        ###
+        ### loop
+        ###
+        dec_output_word = None
         for t in range(self.T-1): #loop to produce target words step by step
-            ### decide which is the input word: consider teacher forcing
-            if t==0: input_word = tgt_batch[t] ### it should be <ini>
-            elif teacher_forcing < 1.0 and random.uniform() > teacher_forcing: input_word = dec_output_word #use t-1 predicted words
-            else: input_word = tgt_batch[t] ### teacher forcing: the t-th words of each batch 
-            ### this is the reference for the words to be predicted
-            #target_word = tgt_batch[t + 1] 
+            ### input word
+            input_word = self.get_input_word(t, teacher_forcing, tgt_batch, dec_output_word)
             ### run forward step
             dec_output, dec_hidden, attn_hidden, dec_attn, enc_coverage = self.forward_step(input_word, attn_hidden, dec_hidden, enc_outputs, enc_coverage)
-            #print("dec_output={}".format(dec_output.shape)) #[B,V]
+            # dec_output [B,V]
+            # dec_hidden is either:
+            #  (h,c) = ([L*D, B, H/D], [L*D, B, H/D]) => if LSTM
+            #  or  h = [L*D, B, H/D] => if GRU
+            # attn_hidden [1,B,H]
+            # dec_attn [B,1,T]
+            # enc_coverage [B,T]
             ### get the 1-best
-            top_val, dec_output_word = dec_output.topk(1) #dec_output_word is [batch_size, 1] (the best entry of each batch)   
-            dec_output_word = dec_output_word.squeeze(1)
-            #print("dec_output_word={}".format(dec_output_word.shape)) #[B] (the index of the best entry for each batch)
-            ### add to final output vectors
-            dec_output_words[t] = dec_output_word #[t, B]
-            dec_outputs[t] = dec_output #[t, B, V]
+            dec_output_word = self.get_one_best(dec_output) #[B]
+            ### update final output vectors
+            dec_output_words[t] = dec_output_word 
+            dec_outputs[t] = dec_output 
 
         #print("dec_outputs={}".format(dec_outputs.shape)) #[T-1,B,V]
         #print("dec_output_words={}".format(dec_output_words.shape)) #[T-1,B] (the index of the best entry for each batch)
         return dec_outputs, dec_output_words
 
     def forward_step(self, input_word, attn_hidden, dec_hidden, enc_outputs, enc_coverage):
-        #print("input_word={}".format(input_word.shape))    #[B] previous target word 
-        #print("attn_hidden={}".format(attn_hidden.shape))  #[1, B, H] previous attn_hidden
-        #print("dec_hidden[0]={}".format(dec_hidden[0].shape)) #[L, B, H] previous dec_hidden 
-        #print("dec_hidden[1]={}".format(dec_hidden[1].shape)) #[L, B, H] previous dec_hidden 
-        #print("enc_outputs={}".format(enc_outputs.shape))  #[S, B, H] encoder outputs
-        #if enc_coverage is not None: print("enc_coverage={}".format(enc_coverage.size()))  #[B, S] encoder coverage vector
+        # input_word [B] previous target word 
+        # attn_hidden [1, B, H] previous attn_hidden
+        # dec_hidden is either: (previous dec_hidden)
+        #  (h,c) = ([L*D, B, H/D], [L*D, B, H/D]) => if LSTM
+        #  or  h = [L*D, B, H/D] => if GRU
+        # enc_outputs [S, B, H] 
+        # enc_coverage [B, S]
         # get the embedding of the current input word (is the previous target word)
-        input_emb = self.embedding(torch.tensor(input_word))
+        input_emb = self.embedding(torch.tensor(input_word)) #[B, E]
         input_emb = self.dropout(input_emb) #[B, E]
         input_emb = input_emb.unsqueeze(0) # [1, B, E]
         #input feeding: input_emb + attn_hidden
         input_emb_attn = torch.cat((input_emb, attn_hidden), 2) #[1, B, E+H]
         #rnn layer
-        rnn_output, dec_hidden = self.rnn(input_emb_attn, dec_hidden)
+        rnn_output, dec_hidden = self.rnn(input_emb_attn, dec_hidden) 
         rnn_output = rnn_output.squeeze(0) # [1, B, H] -> [B, H]
-        #print("rnn_output={}".format(rnn_output.shape)) #[B, H]
-        #print("dec_hidden[0]={}".format(dec_hidden[0].shape)) #[L, B, H] (h)
-        #print("dec_hidden[1]={}".format(dec_hidden[1].shape)) #[L, B, H] (c)
+        ##### rnn_output is equal to dec_hidden[0][-1] (last layer h state)
+        # dec_hidden is either:
+        #  (h,c) = ([L, B, H], [L, B, H]) => if LSTM
+        #  or  h = [L, B, H] => if GRU
 
         # to calculate attention weights for each encoder output
-        # we consider the last layer [-1] h state [0] (c is not used) of dec_hidden => dec_hidden[0][-1]
-        # and all encoder outputs => dec_outputs
-        # apply to encoder outputs to get weighted average
+        # we consider the last layer h state (or rnn_output)
+        # and all encoder outputs 
         laststate = dec_hidden[0][-1] #[B, H]
-        align_weights = self.attn(laststate, enc_outputs, enc_coverage) # [B, S]
-        #print("align_weights={}".format(align_weights.shape))
+        align_weights = self.attn(laststate, enc_outputs, enc_coverage) # [B, S] this is a_t(s) Equation 7 in Luong
 
-        ### accumulate coverage with align_weights
+        ### accumulate align_weights in coverage
         if enc_coverage is not None:
             enc_coverage = enc_coverage + align_weights #[B,S]
 
@@ -130,13 +135,10 @@ class DecoderRNN_Attn(nn.Module):
         enc_outputs = enc_outputs.transpose(1, 0) # [B, S, H]
         context = torch.bmm(align_weights, enc_outputs) # batched multiplication [B, 1, S] x [B, S, H] => [B, 1, H]
         context = context.squeeze(1)  #[B, H]
-        #print('context={}'.format(context.shape))
 
-        # concatenate together the current hidden state of the rnn and context and apply concat layer (Luong eq. 5)
+        # concatenate together the current hidden state of the rnn and context and apply concat layer and tanh (Luong eq. 5)
         cat_laststate_context = torch.cat((laststate, context), 1) # [B, 2*H]
-        #print('cat_rnnoutput_context={}'.format(cat_rnnoutput_context.shape)) 
-        attn_hidden = torch.tanh(self.concat(cat_laststate_context)) #[B, H] applied concat layer 
-        #print('attn_hidden={}'.format(attn_hidden.shape)) #[B, H]
+        attn_hidden = torch.tanh(self.concat(cat_laststate_context)) #[B, H]
 
         if self.pointer:
             pointer_input = torch.cat((context, rnn_output + input_emb.squeeze(0)), 1) #[B, 2*H+E]
@@ -144,10 +146,8 @@ class DecoderRNN_Attn(nn.Module):
 
         # aply output layer (Luong eq. 6)
         dec_output = self.output(attn_hidden) # [B, V]
-        #print("dec_output={}".format(dec_output.shape))
         # apply softmax layer
         dec_output = F.log_softmax(dec_output, dim=1) #[B, V]
-        #print("dec_output={}".format(dec_output.shape))
 
         if self.pointer:
             dec_output = pgen * dec_output #[B,V]
@@ -156,7 +156,6 @@ class DecoderRNN_Attn(nn.Module):
             dec_output = dec_output.scatter_add(1, enc_batch_extend_vocab, attn_weights)
 
         attn_hidden = attn_hidden.unsqueeze(0) #[B, H] => [1, B, H] (vector used for input-feeding)
-        #print("attn_hidden={}".format(attn_hidden.shape))
 
         return dec_output, dec_hidden, attn_hidden, align_weights, enc_coverage
 
@@ -173,7 +172,19 @@ class DecoderRNN_Attn(nn.Module):
         h = torch.cat([h[0:h.size(0):2], h[1:h.size(0):2]], 2)
         return h
 
+    def get_one_best(self, dec_output):
+        top_val, dec_output_word = dec_output.topk(1) #dec_output_word is [batch_size, 1] (the best entry of each batch)   
+        dec_output_word = dec_output_word.squeeze(1)
+        return dec_output_word
 
+    def get_input_word(self, t, teacher_forcing, tgt_batch, dec_output_word=None):
+        if t==0: 
+            input_word = tgt_batch[t] ### it should be <ini>
+        elif teacher_forcing < 1.0 and random.uniform() > teacher_forcing: 
+            input_word = dec_output_word #use t-1 predicted words
+        else: 
+            input_word = tgt_batch[t] ### teacher forcing: the t-th words of each batch 
+        return input_word
 
 
 
