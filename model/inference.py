@@ -25,7 +25,7 @@ class Inference():
 
 
     def display(self, hyp_batch, src_batch):
-        for b in range(len(predict_batch)):
+        for b in range(len(hyp_batch)):
             target= []
             for word_id in hyp_batch[b]:
                 word = self.cfg.tvoc.get(int(word_id))
