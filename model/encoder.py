@@ -21,7 +21,7 @@ class EncoderRNN(nn.Module):
         self.D = 2 if cfg.bidirectional else 1
         ### if bidirectional the number of hidden_size (units) is divided by 2 for each direction
         if cfg.hidden_size % self.D != 0: sys.exit('error: hidden units {} must be an even number'.format(cfg.hidden_size)) 
-        self.H = cfg.hidden_size // self.D
+        self.H = cfg.hidden_size // self.D #half the size for each direction
         self.L = cfg.num_layers
         self.E = self.embeddings.embedding_dim #embedding dimension
         self.V = self.embeddings.num_embeddings #vocabulary size
@@ -34,18 +34,21 @@ class EncoderRNN(nn.Module):
     def forward(self, src_batch, len_src_batch):
         #print("src_batch={}".format(src_batch.shape)) #[B, S]
         #print("len_src_batch={}".format(len_src_batch.shape)) #[B]
-        B = src_batch.size(0)
-        S = src_batch.size(1)
+        self.B = src_batch.size(0)
+        self.S = src_batch.size(1)
         ### embed inputs
         input_emb = self.embeddings(src_batch) #[B,S,E]
+        assert(input_emb.size() == (self.B,self.S,self.E))
         packed_emb = pack_padded_sequence(input_emb, len_src_batch, batch_first=True)
         ### rnn
         outputs, encoder_final = self.rnn(packed_emb)
         outputs, _ = pad_packed_sequence(outputs) ### unpack and take only the outputs, discard the sequence length
-        #outputs [S, B, H]
-        #encoder_final is either:
-        # (h,c) = ([L*D, B, H], [L*D, B, H])
-        # or  h = [L*D, B, H]      
+        assert(outputs.size() == (self.S,self.B,self.H*self.D)) 
+        if isinstance(encoder_final, tuple):
+            assert(encoder_final[0].size() == (self.L*self.D,self.B,self.H))
+            assert(encoder_final[1].size() == (self.L*self.D,self.B,self.H))
+        else: 
+            assert(encoder_final.size() == (self.L*self.D,self.B,self.H))
         return outputs, encoder_final
 
 

@@ -44,7 +44,6 @@ class Attention(nn.Module):
         B = query.size(0)
         H = query.size(1)
         S = context.size(0)
-        #print("B={} S={} H={}".format(B,S,H))
 
         if self.method in ["general", "dot"]:
             if self.method == "general": 

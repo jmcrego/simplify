@@ -48,7 +48,7 @@ def main():
         cfg, mod, opt = chk.load(par.chk)
         cfg.update_par(par) ### updates cfg options with pars
         tst = Dataset(par.tst, cfg.svoc, cfg.tvoc, par.batch_size, 0, 0, do_shuffle=False, do_filter=False, is_test=True)
-        print_time('Inference [It={}]...'.format(cfg.n_iters_sofar))
+        print_time('Inference [model It={}]...'.format(cfg.n_iters_sofar))
         Inference(cfg, mod, tst)
 
 if __name__ == "__main__":

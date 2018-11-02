@@ -11,7 +11,7 @@ from torch.nn.utils.rnn import pack_padded_sequence
 from torch.nn.utils.rnn import pad_packed_sequence
 from model.attention import Attention
 from utils.data import idx_ini
-from utils.utils import print_time
+from utils.utils import print_time, assert_size
 
 class DecoderRNN_Attn(nn.Module):
 
@@ -37,7 +37,7 @@ class DecoderRNN_Attn(nn.Module):
         ### Attention mechanism
         self.attn = Attention(self.H, cfg.attention, cfg.coverage, cfg.cuda)
         ### pgen layer
-        if self.pointer : self.pgen = nn.Linear(self.H*2+self.E, 1)  
+        if self.pointer : self.pgen = nn.Linear(self.H*2+self.E, 1)
         ### concat layer
         self.concat = nn.Linear(self.H*2, self.H) 
         ### output layer
@@ -45,13 +45,16 @@ class DecoderRNN_Attn(nn.Module):
 
     def forward(self, tgt_batch, enc_final, enc_outputs, teacher_forcing):
         # tgt_batch [B, T]
-        # encoder_final is either:
-        #  (h,c) = ([L*D, B, H/D], [L*D, B, H/D]) => if LSTM
-        #  or  h = [L*D, B, H/D] => if GRU
-        # enc_outputs [S,B,H]
         self.S = enc_outputs.shape[0] #source seq_size
         self.T = tgt_batch.shape[1] #target seq_size
         self.B = tgt_batch.shape[0] #batch_size
+        if isinstance(enc_final, tuple):
+            assert(enc_final[0].size() == (self.L*self.D,self.B,self.H/self.D))
+            assert(enc_final[1].size() == (self.L*self.D,self.B,self.H/self.D))
+        else: 
+            assert(enc_final.size() == (self.L*self.D,self.B,self.H/self.D))
+        assert(enc_outputs.size() == (self.S,self.B,self.H)) 
+
         ### these are the output vectors that will be filled at the end of the loop
         dec_output_words = torch.zeros([self.T-1, self.B], dtype=torch.int64) #[T-1, B]
         dec_outputs = torch.zeros([self.T-1, self.B, self.V], dtype=torch.float32) #[T-1, B, V]
@@ -60,8 +63,13 @@ class DecoderRNN_Attn(nn.Module):
             dec_outputs = dec_outputs.cuda()
         ### tgt_batch must be seq_len x batch
         tgt_batch = tgt_batch.transpose(1,0) # [T,B]
-        ### initialize dec_hidden (with dec_final)
-        dec_hidden = self.init_state(enc_final) #([L,B,H], [L,B,H])
+        ### initialize dec_hidden (with enc_final)
+        rnn_hidden = self.init_state(enc_final) #([L,B,H], [L,B,H])
+        if isinstance(rnn_hidden, tuple):
+            assert(rnn_hidden[0].size() == (self.L,self.B,self.H))
+            assert(rnn_hidden[1].size() == (self.L,self.B,self.H))
+        else: 
+            assert(rnn_hidden.size() == (self.L,self.B,self.H))
         ### initialize attn_hidden (Eq 5 in Luong) used for input-feeding
         attn_hidden = Variable(torch.zeros(1, self.B, self.H)) #[1, B, H]
         if self.cuda: 
@@ -76,54 +84,75 @@ class DecoderRNN_Attn(nn.Module):
         ###
         dec_output_word = None
         for t in range(self.T-1): #loop to produce target words step by step
-            ### input word
+#            print("********** t = {}".format(t))
+            ### current input/output words
             input_word = self.get_input_word(t, teacher_forcing, tgt_batch, dec_output_word)
+            assert(input_word.size() == np.array(self.B))
+#            print("input_word = {}".format(input_word))
             ### run forward step
-            dec_output, dec_hidden, attn_hidden, dec_attn, enc_coverage = self.forward_step(input_word, attn_hidden, dec_hidden, enc_outputs, enc_coverage)
-            # dec_output [B,V]
-            # dec_hidden is either:
-            #  (h,c) = ([L*D, B, H/D], [L*D, B, H/D]) => if LSTM
-            #  or  h = [L*D, B, H/D] => if GRU
-            # attn_hidden [1,B,H]
-            # dec_attn [B,1,T]
-            # enc_coverage [B,T]
+            dec_output, rnn_hidden, attn_hidden, dec_attn, enc_coverage = self.forward_step(input_word, attn_hidden, rnn_hidden, enc_outputs, enc_coverage)
+            assert(dec_output.size() == (self.B, self.V))
+            if isinstance(rnn_hidden, tuple):
+                assert(rnn_hidden[0].size() == (self.L,self.B,self.H))
+                assert(rnn_hidden[1].size() == (self.L,self.B,self.H))
+            else: 
+                assert(rnn_hidden.size() == (self.L,self.B,self.H))
+            assert(attn_hidden.size() == (1,self.B, self.H))
+            assert(dec_attn.size() == (self.B, 1, self.S))
+            if enc_coverage is not None:
+                assert(enc_coverage.size() == (self.B, self.S))
             ### get the 1-best
             dec_output_word = self.get_one_best(dec_output) #[B]
+            assert(dec_output_word.size() == np.array(self.B))
+#            print("dec_output_word = {}".format(dec_output_word))
+
             ### update final output vectors
             dec_output_words[t] = dec_output_word 
             dec_outputs[t] = dec_output 
 
+        assert(dec_output_words.size() == (self.T-1, self.B))
+        assert(dec_outputs.size() == (self.T-1, self.B, self.V))
         #print("dec_outputs={}".format(dec_outputs.shape)) #[T-1,B,V]
         #print("dec_output_words={}".format(dec_output_words.shape)) #[T-1,B] (the index of the best entry for each batch)
         return dec_outputs, dec_output_words
 
-    def forward_step(self, input_word, attn_hidden, dec_hidden, enc_outputs, enc_coverage):
+    def forward_step(self, input_word, attn_hidden, rnn_hidden, enc_outputs, enc_coverage):
         # input_word [B] previous target word 
         # attn_hidden [1, B, H] previous attn_hidden
-        # dec_hidden is either: (previous dec_hidden)
+        # rnn_hidden is either: (previous rnn_hidden)
         #  (h,c) = ([L*D, B, H/D], [L*D, B, H/D]) => if LSTM
         #  or  h = [L*D, B, H/D] => if GRU
         # enc_outputs [S, B, H] 
         # enc_coverage [B, S]
         # get the embedding of the current input word (is the previous target word)
         input_emb = self.embedding(torch.tensor(input_word)) #[B, E]
+        assert(input_emb.size() == (self.B,self.E))
         input_emb = self.dropout(input_emb) #[B, E]
+        assert(input_emb.size() == (self.B,self.E))
         input_emb = input_emb.unsqueeze(0) # [1, B, E]
+        assert(input_emb.size() == (1,self.B,self.E))
+#        print("input_emb = {}".format(input_emb))
+#        print("attn_hidden = {}".format(attn_hidden))
         #input feeding: input_emb + attn_hidden
         input_emb_attn = torch.cat((input_emb, attn_hidden), 2) #[1, B, E+H]
+#        print("input_emb_attn = {}".format(input_emb_attn))
+        assert(input_emb_attn.size() == (1,self.B,self.E+self.H))
         #rnn layer
-        rnn_output, dec_hidden = self.rnn(input_emb_attn, dec_hidden) 
+        rnn_output, rnn_hidden = self.rnn(input_emb_attn, rnn_hidden) 
         rnn_output = rnn_output.squeeze(0) # [1, B, H] -> [B, H]
-        ##### rnn_output is equal to dec_hidden[0][-1] (last layer h state)
-        # dec_hidden is either:
+        assert(rnn_output.size() == (self.B,self.H))
+#        print("rnn_output = {}".format(rnn_output))
+        ##### rnn_output is equal to rnn_hidden[0][-1] (last layer h state)
+        # rnn_hidden is either:
         #  (h,c) = ([L, B, H], [L, B, H]) => if LSTM
         #  or  h = [L, B, H] => if GRU
 
         # to calculate attention weights for each encoder output
         # we consider the last layer h state (or rnn_output)
         # and all encoder outputs 
-        laststate = dec_hidden[0][-1] #[B, H]
-        align_weights = self.attn(laststate, enc_outputs, enc_coverage) # [B, S] this is a_t(s) Equation 7 in Luong
+        align_weights = self.attn(rnn_output, enc_outputs, enc_coverage) # [B, S] this is a_t(s) Equation 7 in Luong
+        assert(align_weights.size() == (self.B,self.S))
+#        print("align_weights = {}".format(align_weights))
 
         ### accumulate align_weights in coverage
         if enc_coverage is not None:
@@ -135,10 +164,14 @@ class DecoderRNN_Attn(nn.Module):
         enc_outputs = enc_outputs.transpose(1, 0) # [B, S, H]
         context = torch.bmm(align_weights, enc_outputs) # batched multiplication [B, 1, S] x [B, S, H] => [B, 1, H]
         context = context.squeeze(1)  #[B, H]
+        assert(context.size() == (self.B,self.H))
+#        print("context = {}".format(context))
 
         # concatenate together the current hidden state of the rnn and context and apply concat layer and tanh (Luong eq. 5)
-        cat_laststate_context = torch.cat((laststate, context), 1) # [B, 2*H]
-        attn_hidden = torch.tanh(self.concat(cat_laststate_context)) #[B, H]
+        cat_rnnoutput_context = torch.cat((rnn_output, context), 1) # [B, 2*H]
+        attn_hidden = torch.tanh(self.concat(cat_rnnoutput_context)) #[B, H]
+        assert(attn_hidden.size() == (self.B,self.H))
+#        print("attn_hidden = {}".format(attn_hidden))
 
         if self.pointer:
             pointer_input = torch.cat((context, rnn_output + input_emb.squeeze(0)), 1) #[B, 2*H+E]
@@ -148,6 +181,8 @@ class DecoderRNN_Attn(nn.Module):
         dec_output = self.output(attn_hidden) # [B, V]
         # apply softmax layer
         dec_output = F.log_softmax(dec_output, dim=1) #[B, V]
+        assert(dec_output.size() == (self.B,self.V)) 
+#        print("dec_output = {}".format(dec_output))
 
         if self.pointer:
             dec_output = pgen * dec_output #[B,V]
@@ -157,7 +192,7 @@ class DecoderRNN_Attn(nn.Module):
 
         attn_hidden = attn_hidden.unsqueeze(0) #[B, H] => [1, B, H] (vector used for input-feeding)
 
-        return dec_output, dec_hidden, attn_hidden, align_weights, enc_coverage
+        return dec_output, rnn_hidden, attn_hidden, align_weights, enc_coverage
 
     def init_state(self, encoder_hidden):
         if encoder_hidden is None: return None

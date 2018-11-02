@@ -22,14 +22,18 @@ class Training():
         loss_total_N_iters = 0  # Reset every print_every
         Iter = 0
         for (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch) in trn.minibatches():
+            assert(len(src_batch)==len(tgt_batch)==len(ref_batch)==len(ref_batch)==len(raw_src_batch)==len(raw_tgt_batch)==len(len_src_batch))
             if cfg.cuda:
                 src_batch = src_batch.cuda()
                 tgt_batch = tgt_batch.cuda()
                 ref_batch = ref_batch.cuda()
-            dec_outputs, _ = mod(src_batch, tgt_batch, len_src_batch) # forward returns: [S,B,V] [S,B]
+            dec_outputs, dec_output_words = mod(src_batch, tgt_batch, len_src_batch) # forward returns: [S,B,V] [S,B]
             dec_outputs = dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size)
+#            print(dec_outputs)
+#            print(dec_output_words)
             ref_batch = ref_batch.contiguous().view(-1)
             loss = F.nll_loss(dec_outputs, ref_batch, ignore_index=cfg.tvoc.idx_pad) #loss normalized by word
+#            print(loss)
             loss_total_N_iters += loss.item() 
             mod.zero_grad() # reset gradients
             loss.backward() # Backward propagation
