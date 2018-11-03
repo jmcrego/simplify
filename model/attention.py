@@ -15,6 +15,7 @@ class Attention(nn.Module):
     def __init__(self, hidden_size, method, coverage, cuda):
         super(Attention, self).__init__()
         self.method = method
+        self.cuda = cuda
 
         if method == 'dot': 
             pass #no need to use a layer
@@ -72,6 +73,8 @@ class Attention(nn.Module):
             scores = scores.view(-1, self.S)  # [B,S]
 
         mask = lens2mask(len_src_batch, self.S) #[B,S]
+        if self.cuda:
+            mask = mask.cuda()
 #        mask = mask.unsqueeze(1)  #[B,1,S]
         scores.masked_fill_(1-mask, -float('inf')) ### Fills elements of scores with -inf where 1-mask is one (padded words)
 
