@@ -25,7 +25,8 @@ class Inference():
 
 
     def display(self, hyp_batch, src_batch):
-#        assert(len(hyp_batch) == len(src_batch))
+        hyp_batch = hyp_batch.permute(1,0)
+        assert(len(hyp_batch) == len(src_batch))
         for b in range(len(hyp_batch)):
             source, target = [], []
             for word_id in src_batch[b]: source.append("{}".format(self.cfg.svoc.get(int(word_id))))
