@@ -113,7 +113,7 @@ class DecoderRNN_Attn(nn.Module):
         assert(dec_output_words.size() == (self.T-1, self.B))
         assert(dec_outputs.size() == (self.T-1, self.B, self.V))
         #print("dec_outputs={}".format(dec_outputs.shape)) #[T-1,B,V]
-        #print("dec_output_words={}".format(dec_output_words.shape)) #[T-1,B] (the index of the best entry for each batch)
+        print("dec_output_words={}".format(dec_output_words.shape)) #[T-1,B] (the index of the best entry for each batch)
         return dec_outputs, dec_output_words
 
     def forward_step(self, input_word, attn_hidden, rnn_hidden, enc_outputs, enc_coverage):
