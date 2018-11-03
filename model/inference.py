@@ -25,14 +25,10 @@ class Inference():
 
 
     def display(self, hyp_batch, src_batch):
+        assert(len(hyp_batch) == len(src_batch))
         for b in range(len(hyp_batch)):
-            target= []
-            for word_id in hyp_batch[b]:
-                word = self.cfg.tvoc.get(int(word_id))
-                target.append("{}".format(word))
-            print(' '.join(target))
-            source = []
-            for word_id in src_batch[b]:
-                word = self.cfg.svoc.get(int(word_id))
-                source.append("{}".format(word))
+            source, target= [], []
+            for word_id in src_batch[b]: source.append("{}".format(self.cfg.svoc.get(int(word_id))))
+            for word_id in hyp_batch[b]: target.append("{}".format(self.cfg.tvoc.get(int(word_id))))
             print(' '.join(source))
+            print(' '.join(target))
