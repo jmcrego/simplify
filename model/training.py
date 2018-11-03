@@ -21,13 +21,13 @@ class Training():
         lr = cfg.par.lr
         loss_total_N_iters = 0  # Reset every print_every
         Iter = 0
-        for (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch) in trn.minibatches():
+        for (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch, len_tgt_batch) in trn.minibatches():
             assert(len(src_batch)==len(tgt_batch)==len(ref_batch)==len(ref_batch)==len(raw_src_batch)==len(raw_tgt_batch)==len(len_src_batch))
             if cfg.cuda:
                 src_batch = src_batch.cuda()
                 tgt_batch = tgt_batch.cuda()
                 ref_batch = ref_batch.cuda()
-            dec_outputs, dec_output_words = mod(src_batch, tgt_batch, len_src_batch) # forward returns: [S,B,V] [S,B]
+            dec_outputs, dec_output_words = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) # forward returns: [S,B,V] [S,B]
             dec_outputs = dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size)
 #            print(dec_outputs)
 #            print(dec_output_words)
@@ -57,12 +57,12 @@ class Training():
         ref_data = []
         loss_total = 0
         Iter = 0
-        for (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch) in val.minibatches():
+        for (src_batch, tgt_batch, ref_batch, raw_src_batch, raw_tgt_batch, len_src_batch, len_tgt_batch) in val.minibatches():
             if cfg.cuda:
                 src_batch = src_batch.cuda()
                 tgt_batch = tgt_batch.cuda()
                 ref_batch = ref_batch.cuda()
-            dec_outputs, dec_output_words = mod(src_batch, tgt_batch, len_src_batch) ### forward  returns: [S,B,V] [S,B]
+            dec_outputs, dec_output_words = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward  returns: [T,B,V] [T,B]
             loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad) #loss normalized by word
             loss_total += loss.item()
             Iter += 1

@@ -7,7 +7,7 @@ import torch.nn.functional as F
 import random
 import numpy as np
 from torch.autograd import Variable
-from utils.utils import print_time
+from utils.utils import print_time, lens2mask
 
 
 class Attention(nn.Module):
@@ -37,30 +37,30 @@ class Attention(nn.Module):
         else: sys.exit("error: bad attention method {} option. Use: dot OR general OR concat\n".format(method))
 
 
-    def forward(self, query, context, coverage=None):
+    def forward(self, query, context, len_src_batch, coverage=None):
         #query [B, H] (dec_output, h_t in Luong)
         #context [S, B, H] (enc_hidden, \hat{h}_s in Luong)
         #coverage [B, S] sum over the previous attention vectors
-        B = query.size(0)
-        H = query.size(1)
-        S = context.size(0)
+        self.B = query.size(0)
+        self.H = query.size(1)
+        self.S = context.size(0)
 
         if self.method in ["general", "dot"]:
             if self.method == "general": 
                 query = self.W_a(query) #[B,H]
-            query = query.view(B, 1, H)  #[B,1,H]
+            query = query.view(self.B, 1, self.H)  #[B,1,H]
             context = context.permute(1,2,0) #[B,H,S]
             scores = torch.bmm(query, context).squeeze(1) # [B,1,H] x [B,H,S] --> [B,1,S] --> [B,S]
 
         else: 
             ### context
             context = context.permute(1,0,2) #[B,S,H]
-            context = context.contiguous().view(-1, H) #[B*S,H]
+            context = context.contiguous().view(-1, self.H) #[B*S,H]
             context = self.W_a_h(context) 
             ### query
             query = self.W_a_s(query) #query [B, H]
-            query = query.unsqueeze(1).expand(B, S, H) #[B, 1, H] => [B, S, H]
-            query = query.contiguous().view(-1, H) # [B*S,H]
+            query = query.unsqueeze(1).expand(self.B, self.S, self.H) #[B, 1, H] => [B, S, H]
+            query = query.contiguous().view(-1, self.H) # [B*S,H]
             scores = context + query # [B*S,H]
             ### coverage
             if coverage is not None:
@@ -69,7 +69,11 @@ class Attention(nn.Module):
                 scores = scores + coverage # [B*S,H]
             scores = torch.tanh(scores) # [B*S,H]
             scores = self.v(scores)  # [B*S,1]
-            scores = scores.view(-1, S)  # [B, S]
+            scores = scores.view(-1, self.S)  # [B,S]
+
+        mask = lens2mask(len_src_batch, self.S) #[B,S]
+#        mask = mask.unsqueeze(1)  #[B,1,S]
+        scores.masked_fill_(1-mask, -float('inf')) ### Fills elements of scores with -inf where 1-mask is one (padded words)
 
         #normalize scores
         align = F.softmax(scores, dim=1) #[B, S]

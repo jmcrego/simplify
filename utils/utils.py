@@ -23,3 +23,10 @@ def assert_tuple_size(t,size):
 		assert(t[1].size() == size)
 	else:
 		assert(t.size() == size)
+
+def lens2mask(lengths, max_lengths=None):
+	batch_size = lengths.numel()
+	max_len = max_lengths or lengths.max()
+	mask = torch.arange(0, max_len).type_as(lengths).repeat(batch_size, 1).lt(lengths.unsqueeze(1))
+	return mask
+

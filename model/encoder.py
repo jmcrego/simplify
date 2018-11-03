@@ -34,6 +34,7 @@ class EncoderRNN(nn.Module):
     def forward(self, src_batch, len_src_batch):
         #print("src_batch={}".format(src_batch.shape)) #[B, S]
         #print("len_src_batch={}".format(len_src_batch.shape)) #[B]
+
         self.B = src_batch.size(0)
         self.S = src_batch.size(1)
         ### embed inputs
