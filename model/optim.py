@@ -13,10 +13,10 @@ class Optimizer(object):
 
     def __init__(self, cfg, mod):
         self.cfg = cfg
-        if cfg.method == "adam":  self.optimizer = torch.optim.Adam(mod.parameters(), lr=cfg.par.lr)
-        elif cfg.method == "sgd": self.optimizer = torch.optim.SGD(mod.parameters(), lr=cfg.par.lr)
-        elif cfg.method == "adadelta": self.optimizer = torch.optim.Adadelta(mod.parameters())
-        else: sys.exit("error: bad -method {} option. Use: adam OR sgd\n".format(cfg.method))
+        if cfg.opt_method == "adam":  self.optimizer = torch.optim.Adam(mod.parameters(), lr=cfg.par.lr)
+        elif cfg.opt_method == "sgd": self.optimizer = torch.optim.SGD(mod.parameters(), lr=cfg.par.lr)
+        elif cfg.opt_method == "adadelta": self.optimizer = torch.optim.Adadelta(mod.parameters())
+        else: sys.exit("error: bad -opt_method {} option. Use: adam OR sgd\n".format(cfg.opt_method))
         self.scheduler = ReduceLROnPlateau(self.optimizer, factor=cfg.par.decay, verbose=True)
 
     def step(self):

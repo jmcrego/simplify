@@ -8,5 +8,5 @@ reuse_words: True
 attention: 'concat'
 coverage: False
 pointer: False
-method: 'adadelta'
+opt_method: 'adadelta'
 max_grad_norm: 2.0

@@ -21,7 +21,7 @@ class Config():
         self.attention = 'dot'
         self.coverage = None
         self.pointer = None
-        self.method = None         
+        self.opt_method = None         
         self.max_grad_norm = None
         self.n_iters_sofar = None
 
@@ -38,7 +38,7 @@ class Config():
             elif o=="attention":     self.attention = v
             elif o=="coverage":      self.coverage = bool(v)
             elif o=="pointer":       self.pointer = bool(v)
-            elif o=="method":        self.method = v
+            elif o=="opt_method":    self.opt_method = v
             elif o=="max_grad_norm": self.max_grad_norm = float(v)
             else: sys.exit("error: unparsed {} config option.".format(o))
 
