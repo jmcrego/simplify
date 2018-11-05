@@ -59,28 +59,40 @@ class Training():
                 src_batch = src_batch.cuda()
                 tgt_batch = tgt_batch.cuda()
                 ref_batch = ref_batch.cuda()
+#            print("tgt_batch={}".format(tgt_batch.shape))
             dec_outputs, dec_output_words = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward  returns: [T,B,V] [T,B]
             loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad) #loss normalized by word
             loss_total += loss.item()
             Iter += 1
-            hyp_data.expand(dec_output_words.permute(1,0))
-            ref_data.expand(ref_batch)
+            hyp_data.extend(dec_output_words.permute(1,0))
+            ref_data.extend(ref_batch)
         #update learning rate
         lr = opt.update_lr(loss_total)
         if Iter > 0:
-            print_time('VALID iter:{} loss={:.4f} bleu={:.2f}'.format(cfg.n_iters_sofar, loss_total/Iter, get_bleu(hyp_data)))
+            print_time('VALID iter:{} loss={:.4f} bleu={:.2f}'.format(cfg.n_iters_sofar, loss_total/Iter, self.get_bleu(hyp_data,ref_data,cfg)))
             chk.save(cfg, mod, opt, loss_total/Iter)
         return lr
 
-        def get_bleu(self, hyp_data, ref_data):
-            dec_output_words = dec_output_words.permute(1,0) #[B,S]
-            for sent in dec_output_words: 
-                hyp_data.append(' '.join(cfg.tvoc.get_list(sent.tolist())))
-            for sent in raw_tgt_batch: 
-                ref_data.append(' '.join([wrd for wrd in sent]))
-            print(ref_data)
-            print(hyp_data)
-            bleu, addition = corpus_bleu(hyp_data, ref_data) #print(bleu[0]*100)
-            return bleu
+    def get_bleu(self, hyp_data, ref_data, cfg):
+        assert(len(hyp_data) == len(ref_data))
+
+        hyp_str = []
+        for sent in hyp_data: 
+            sent_str = []
+            for wrdid in sent:
+#                if (wrdid < 4): break
+                sent_str.append(cfg.tvoc.get(int(wrdid)))
+            hyp_str.append(' '.join(sent_str))
+
+        ref_str = []
+        for sent in ref_data: 
+            sent_str = []
+            for wrdid in sent:
+                if (wrdid < 4): break
+                sent_str.append(cfg.tvoc.get(int(wrdid)))
+            ref_str.append(' '.join(sent_str))
+
+        bleu, addition = corpus_bleu(hyp_str, ref_str) #print(bleu[0]*100)
+        return bleu[0]*100
 
 
