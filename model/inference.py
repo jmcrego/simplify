@@ -30,10 +30,10 @@ class Inference():
         for b in range(len(hyp_batch)):
             source, target = [], []
             for word_id in src_batch[b]: 
-                if word_id < 4: break
+#                if word_id < 4: break
                 source.append("{}".format(self.cfg.svoc.get(int(word_id))))
             for word_id in hyp_batch[b]: 
-                if word_id < 4: break
+#                if word_id < 4: break
                 target.append("{}".format(self.cfg.tvoc.get(int(word_id))))
             print("---------------------")
             print(' '.join(source))
