@@ -27,7 +27,7 @@ class Training():
                 src_batch = src_batch.cuda()
                 tgt_batch = tgt_batch.cuda()
                 ref_batch = ref_batch.cuda()
-            dec_outputs, dec_output_words = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) # forward returns: [S,B,V] [S,B]
+            dec_outputs, dec_output_words = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) # forward returns: [T,B,V] [T,B]
             dec_outputs = dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size)
             ref_batch = ref_batch.contiguous().view(-1)
             loss = F.nll_loss(dec_outputs, ref_batch, ignore_index=cfg.tvoc.idx_pad) #loss normalized by word
@@ -47,7 +47,6 @@ class Training():
 
         print_time('End of TRAIN seconds={:.2f}'.format(time.time() - ini_time))
 
-
     def validation(self, cfg, mod, opt, val, chk):
         print_time('Start VALID')
         hyp_data = []
@@ -59,7 +58,6 @@ class Training():
                 src_batch = src_batch.cuda()
                 tgt_batch = tgt_batch.cuda()
                 ref_batch = ref_batch.cuda()
-#            print("tgt_batch={}".format(tgt_batch.shape))
             dec_outputs, dec_output_words = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward  returns: [T,B,V] [T,B]
             loss = F.nll_loss(dec_outputs.permute(1,0,2).contiguous().view(-1, cfg.tvoc.size), ref_batch.contiguous().view(-1), ignore_index=cfg.tvoc.idx_pad) #loss normalized by word
             loss_total += loss.item()
@@ -80,7 +78,7 @@ class Training():
         for sent in hyp_data: 
             sent_str = []
             for wrdid in sent:
-#                if (wrdid < 4): break
+                if (wrdid < 4): break
                 sent_str.append(cfg.tvoc.get(int(wrdid)))
             hyp_str.append(' '.join(sent_str))
 
@@ -91,8 +89,9 @@ class Training():
                 if (wrdid < 4): break
                 sent_str.append(cfg.tvoc.get(int(wrdid)))
             ref_str.append(' '.join(sent_str))
+            print(ref_str[-1])
 
-        bleu, addition = corpus_bleu(hyp_str, ref_str) #print(bleu[0]*100)
+        bleu, addition = corpus_bleu(hyp_str, ref_str)
         return bleu[0]*100
 
 

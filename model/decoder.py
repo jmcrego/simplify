@@ -22,8 +22,8 @@ class DecoderRNN_Attn(nn.Module):
         self.V = self.embedding.num_embeddings #vocabulary size
         self.E = self.embedding.embedding_dim #embedding size
         self.L = cfg.num_layers
-        self.D = 2 if cfg.bidirectional else 1
-        self.H = cfg.hidden_size
+        self.D = 2 if cfg.bidirectional else 1 ### num of directions
+        self.H = cfg.hidden_size 
         self.cuda = cfg.cuda
         self.pointer = cfg.pointer
         self.coverage = cfg.coverage
