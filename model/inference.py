@@ -22,7 +22,7 @@ class Inference():
                     src_batch = src_batch.cuda()
                     tgt_batch = tgt_batch.cuda()
 #                if self.cfg.beam_size == 1:
-                 _, hyp_batch = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward
+                _, hyp_batch = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward
 #                else:
 #                    _, hyp_batch = mod.beam_search(src_batch, tgt_batch, len_src_batch, len_tgt_batch)
       
