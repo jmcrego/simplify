@@ -39,17 +39,10 @@ class EncoderRNN(nn.Module):
         self.S = src_batch.size(1)
         ### embed inputs
         input_emb = self.embeddings(src_batch) #[B,S,E]
-        assert(input_emb.size() == (self.B,self.S,self.E))
         packed_emb = pack_padded_sequence(input_emb, len_src_batch, batch_first=True)
         ### rnn
-        outputs, encoder_final = self.rnn(packed_emb)
-        outputs, _ = pad_packed_sequence(outputs) ### unpack and take only the outputs, discard the sequence length
-        assert(outputs.size() == (self.S,self.B,self.H*self.D)) 
-        if isinstance(encoder_final, tuple):
-            assert(encoder_final[0].size() == (self.L*self.D,self.B,self.H))
-            assert(encoder_final[1].size() == (self.L*self.D,self.B,self.H))
-        else: 
-            assert(encoder_final.size() == (self.L*self.D,self.B,self.H))
+        outputs, encoder_final = self.rnn(packed_emb) #encoder_final ([L*D, B, H], [L*D, B, H]) or [L*D, B, H] ### H is original hidden_size / D
+        outputs, _ = pad_packed_sequence(outputs) #outputs [S,B,H*D] ### unpack and take only the outputs, discard the sequence length 
         return outputs, encoder_final
 
 

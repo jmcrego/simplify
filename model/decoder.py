@@ -45,16 +45,13 @@ class DecoderRNN_Attn(nn.Module):
 
     def forward(self, tgt_batch, len_src_batch, len_tgt_batch, enc_final, enc_outputs, teacher_forcing):
         # tgt_batch [B, T]
+        # len_src_batch [B]
+        # len_tgt_batch [B]
+        # enc_final ([L*D,B,H/D], [L*D,B,H/D]) or [L*D,B,H/D]
+        # enc_outputs [S,B,H]
         self.S = enc_outputs.shape[0] #source seq_size
         self.T = tgt_batch.shape[1] #target seq_size
         self.B = tgt_batch.shape[0] #batch_size
-        assert(len(tgt_batch) == len(len_tgt_batch))
-        if isinstance(enc_final, tuple):
-            assert(enc_final[0].size() == (self.L*self.D,self.B,self.H/self.D))
-            assert(enc_final[1].size() == (self.L*self.D,self.B,self.H/self.D))
-        else: 
-            assert(enc_final.size() == (self.L*self.D,self.B,self.H/self.D))
-        assert(enc_outputs.size() == (self.S,self.B,self.H)) 
 
         ### these are the output vectors that will be filled at the end of the loop
         dec_output_words = torch.zeros([self.T-1, self.B], dtype=torch.int64) #[T-1, B]
@@ -65,14 +62,9 @@ class DecoderRNN_Attn(nn.Module):
         ### tgt_batch must be seq_len x batch
         tgt_batch = tgt_batch.transpose(1,0) # [T,B]
         ### initialize dec_hidden (with enc_final)
-        rnn_hidden = self.init_state(enc_final) #([L,B,H], [L,B,H])
-        if isinstance(rnn_hidden, tuple):
-            assert(rnn_hidden[0].size() == (self.L,self.B,self.H))
-            assert(rnn_hidden[1].size() == (self.L,self.B,self.H))
-        else: 
-            assert(rnn_hidden.size() == (self.L,self.B,self.H))
+        rnn_hidden = self.init_state(enc_final) #([L,B,H], [L,B,H]) or [L,B,H]
         ### initialize attn_hidden (Eq 5 in Luong) used for input-feeding
-        attn_hidden = Variable(torch.zeros(1, self.B, self.H)) #[1, B, H]
+        attn_hidden = torch.zeros(1, self.B, self.H) #[1, B, H]
         if self.cuda: 
             attn_hidden = attn_hidden.cuda()
         ### initialize coverage vector (Eq 10 in See)
@@ -100,10 +92,6 @@ class DecoderRNN_Attn(nn.Module):
             dec_output_words[t] = dec_output_word 
             dec_outputs[t] = dec_output 
 
-        assert(dec_output_words.size() == (self.T-1, self.B))
-        assert(dec_outputs.size() == (self.T-1, self.B, self.V))
-        #print("dec_outputs={}".format(dec_outputs.shape)) #[T-1,B,V]
-        #print("dec_output_words={}".format(dec_output_words.shape)) #[T-1,B] (the index of the best entry for each batch)
         return dec_outputs, dec_output_words
 
     def forward_step(self, input_word, attn_hidden, rnn_hidden, enc_outputs, len_src_batch, enc_coverage):
