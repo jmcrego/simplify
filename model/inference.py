@@ -28,7 +28,7 @@ class Inference():
         hyp_batch = hyp_batch.permute(1,0)
         assert(len(hyp_batch) == len(src_batch))
         for b in range(len(hyp_batch)):
-            source, target, predic = [], []
+            source, target, predic = [], [], []
             print("--- SRC ------------------")
             for word_id in src_batch[b]: 
 #                if word_id < 4: break
