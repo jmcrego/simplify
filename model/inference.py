@@ -20,21 +20,27 @@ class Inference():
                 src_batch = src_batch.cuda()
                 tgt_batch = tgt_batch.cuda()
             _, hyp_batch = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward
-            self.display(hyp_batch, src_batch)
+            self.display(hyp_batch, tgt_batch)
         print_time('End of TEST seconds={:.2f})\n'.format(time.time() - ini_time))
 
 
-    def display(self, hyp_batch, src_batch):
+    def display(self, src_batch, tgt_batch, hyp_batch):
         hyp_batch = hyp_batch.permute(1,0)
         assert(len(hyp_batch) == len(src_batch))
         for b in range(len(hyp_batch)):
-            source, target = [], []
+            source, target, predic = [], []
+            print("--- SRC ------------------")
             for word_id in src_batch[b]: 
 #                if word_id < 4: break
                 source.append("{}".format(self.cfg.svoc.get(int(word_id))))
-            for word_id in hyp_batch[b]: 
+            print(' '.join(source))
+            print("--- TGT ------------------")
+            for word_id in tgt_batch[b]: 
 #                if word_id < 4: break
                 target.append("{}".format(self.cfg.tvoc.get(int(word_id))))
-            print("---------------------")
-            print(' '.join(source))
             print(' '.join(target))
+            print("--- HYP ------------------")
+            for word_id in hyp_batch[b]: 
+#                if word_id < 4: break
+                predic.append("{}".format(self.cfg.tvoc.get(int(word_id))))
+            print(' '.join(predic))
