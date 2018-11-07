@@ -20,7 +20,7 @@ class Inference():
                 src_batch = src_batch.cuda()
                 tgt_batch = tgt_batch.cuda()
             _, hyp_batch = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward
-            self.display(hyp_batch, tgt_batch)
+            self.display(src_batch, tgt_batch, hyp_batch)
         print_time('End of TEST seconds={:.2f})\n'.format(time.time() - ini_time))
 
 
