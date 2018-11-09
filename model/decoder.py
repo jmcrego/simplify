@@ -77,7 +77,7 @@ class DecoderRNN_Attn(nn.Module):
         ### these are the output vectors that will be filled at the end of the loop
 #        dec_output_words = torch.zeros([self.T-1, self.B], dtype=torch.int64) #[T-1, B]
 #        if self.cuda: dec_output_words = dec_output_words.cuda()
-        dec_output_words = self.tt.LongIntTensor(self.T-1, self.B)
+        dec_output_words = self.tt.LongTensor(self.T-1, self.B)
 
 #        dec_outputs = torch.zeros([self.T-1, self.B, self.V], dtype=torch.float32) #[T-1, B, V]
 #        if self.cuda: dec_outputs = dec_outputs.cuda()
