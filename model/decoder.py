@@ -28,7 +28,7 @@ class DecoderRNN_Attn(nn.Module):
         self.D = 2 if cfg.bidirectional else 1 ### num of directions
         self.H = cfg.hidden_size 
         self.cuda = cfg.cuda
-        self.tt = torch.cuda if self.cuda else torch        
+#        self.tt = torch.cuda if self.cuda else torch        
         self.pointer = cfg.pointer
         self.coverage = cfg.coverage
         ### dropout layer to apply on top of the embedding layer
@@ -63,10 +63,7 @@ class DecoderRNN_Attn(nn.Module):
         rnn_hidden = self.init_state(enc_final) #([L,B,H], [L,B,H]) or [L,B,H]
         ### initialize attn_hidden (Eq 5 in Luong) used for input-feeding
         attn_hidden = torch.zeros(1, self.B, self.H) #[1, B, H]
-#        if self.cuda: attn_hidden.cuda()
-        attn_hidden.cuda()
-        print(attn_hidden)
-        sys.exit()
+        if self.cuda: attn_hidden.cuda()
         ### initialize coverage vector (Eq 10 in See)
         enc_coverage =  None
         if self.coverage:
@@ -111,7 +108,7 @@ class DecoderRNN_Attn(nn.Module):
         ### initialize coverage vector (Eq 10 in See)
         enc_coverage =  None
         if self.coverage:
-            enc_coverage = torch.zeros([self.B, self.S], dtype=self.tt.float32) #[B, S]
+            enc_coverage = torch.zeros([self.B, self.S], dtype=torch.float32) #[B, S]
 
 
         beams = [Beam(self.b, self.n, cuda=self.cuda) for _ in range(self.B)] #one beam per sentence in batch
