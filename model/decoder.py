@@ -62,7 +62,7 @@ class DecoderRNN_Attn(nn.Module):
         tgt_batch = tgt_batch.transpose(1,0) # [T,B]
         ### initialize dec_hidden (with enc_final)
         rnn_hidden = self.init_state(enc_final) #([L,B,H], [L,B,H]) or [L,B,H]
-        print("rnn_hidden={}".format(rnn_hidden.shape))
+        print("rnn_hidden={}".format(rnn_hidden[0].shape))
         sys.exit()
         ### initialize attn_hidden (Eq 5 in Luong) used for input-feeding
         attn_hidden = self.tt.FloatTensor(1, self.B, self.H).fill_(0.0)
