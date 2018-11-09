@@ -35,7 +35,7 @@ def main():
         else: ######################## training from scratch ##############################
             cfg = Config(par) ### reads cfg and par (reads vocabularies)
             mod = Model(cfg)
-#            if cfg.cuda: mod.cuda() ### moves to GPU
+            if cfg.cuda: mod.cuda() ### moves to GPU
             opt = Optimizer(cfg, mod) #build Optimizer
             print_time('Learning [from scratch]...')
 
