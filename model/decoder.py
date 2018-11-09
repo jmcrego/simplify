@@ -81,6 +81,7 @@ class DecoderRNN_Attn(nn.Module):
             ### current input/output words
             input_word = self.get_input_word(t, teacher_forcing, tgt_batch, dec_output_words) #[B]
             print(input_word)
+            print(attn_hidden)
             sys.exit()
             ### run forward step
             dec_output, rnn_hidden, attn_hidden, dec_attn, enc_coverage = self.forward_step(input_word, attn_hidden, rnn_hidden, enc_outputs, len_src_batch, enc_coverage)
