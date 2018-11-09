@@ -95,12 +95,14 @@ class Params():
         INFERENCE:
 *          -chk        FILE : checkpoint file to load when testing (use the most recent otherwise)
 *          -tst        FILE : run inference over FILE
-           -beam_size   INT : size of beam when decoding [5]""".format(argv.pop(0))
+           -n_best      INT : n_best size [1]
+           -beam_size   INT : size of beam when decoding [1]""".format(argv.pop(0))
 
         self.max_src_len = 80
         self.max_tgt_len = 80
         self.n_iters = 10000
-        self.beam_size = 5
+        self.beam_size = 1
+        self.n_best = 1
         self.batch_size = 32
         self.dropout = 0.3
         self.lr = 1.0
@@ -138,6 +140,7 @@ class Params():
             elif (tok=="-emb_src"     and len(argv)): self.emb_src = argv.pop(0)
             elif (tok=="-emb_tgt"     and len(argv)): self.emb_tgt = argv.pop(0)
             elif (tok=="-beam_size"   and len(argv)): self.beam_size = int(argv.pop(0))
+            elif (tok=="-n_best"      and len(argv)): self.n_best = int(argv.pop(0))
             elif (tok=="-print_every" and len(argv)): self.print_every = int(argv.pop(0))
             elif (tok=="-valid_every" and len(argv)): self.valid_every = int(argv.pop(0))
             elif (tok=="-seed"        and len(argv)): self.seed = int(argv.pop(0))

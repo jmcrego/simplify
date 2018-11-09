@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import random
 import numpy as np
-from torch.autograd import Variable
+#from torch.autograd import Variable
 from utils.utils import print_time, lens2mask
 
 

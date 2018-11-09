@@ -27,7 +27,7 @@ class Checkpoint(object):
         torch.save(chk, checkpoint) 
         print_time("Saved checkpoint [{}]".format(checkpoint))
 
-    def load(self, file=None):
+    def load(self, par, file=None):
         if file is None: ### load the most recent checkpoint in self.path
             if not os.path.exists(self.path): sys.exit('error: no experiments found in {}'.format(self.path))
             all_saves = sorted(glob.glob(self.path+'/checkpoint_*.pt'), reverse=True)
@@ -39,9 +39,10 @@ class Checkpoint(object):
         chk = torch.load(checkpoint) 
         ### load cfg
         cfg = chk['cfg'] 
+        cfg.update_par(par)
         ### load model
-        mod = Model(cfg)
-        mod.load_state_dict(chk['mod_state'])
+        mod = Model(cfg) #builds a model using cfg options
+        mod.load_state_dict(chk['mod_state']) #loads the model saved
         if cfg.cuda: mod.cuda() ### move to GPU
         ### load optimizer
         opt = Optimizer(cfg,mod)

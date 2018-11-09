@@ -28,8 +28,8 @@ def main():
         chk = Checkpoint(par.dir)
 
         if chk.contains_model: ####### resume training ####################################
-            cfg, mod, opt = chk.load() ### also moves to GPU if cfg.cuda
-            cfg.update_par(par) ### updates par in cfg
+            cfg, mod, opt = chk.load(par) ### also moves to GPU if cfg.cuda
+#            cfg.update_par(par) ### updates par in cfg
             print_time('Learning [resume It={}]...'.format(cfg.n_iters_sofar))
 
         else: ######################## training from scratch ##############################
@@ -45,8 +45,8 @@ def main():
 
     elif par.tst: #################### inference ##########################################
         chk = Checkpoint()
-        cfg, mod, opt = chk.load(par.chk)
-        cfg.update_par(par) ### updates cfg options with pars
+        cfg, mod, opt = chk.load(par, par.chk)
+#        cfg.update_par(par) ### updates cfg options with pars
         tst = Dataset(par.tst, cfg.svoc, cfg.tvoc, par.batch_size, 0, 0, do_shuffle=False, do_filter=False, is_test=True)
         print_time('Inference [model It={}]...'.format(cfg.n_iters_sofar))
         Inference(cfg, mod, tst)

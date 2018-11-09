@@ -6,8 +6,6 @@ import os
 import torch
 import time
 from utils.utils import print_time
-#reload(sys)
-#sys.setdefaultencoding('utf8')
 
 
 class Inference(): 
@@ -21,13 +19,9 @@ class Inference():
                 if cfg.cuda:
                     src_batch = src_batch.cuda()
                     tgt_batch = tgt_batch.cuda()
-                if self.cfg.par.beam_size == 1:
-                    _, hyp_batch = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward
-                else:
-                    _, hyp_batch = mod.beam_search(src_batch, tgt_batch, len_src_batch, len_tgt_batch)
-      
-                self.display(src_batch, ref_batch, hyp_batch)
 
+                _, hyp_batch = mod(src_batch, tgt_batch, len_src_batch, len_tgt_batch) ### forward      
+                self.display(src_batch, ref_batch, hyp_batch)
 
         print_time('End of TEST seconds={:.2f})\n'.format(time.time() - ini_time))
 
