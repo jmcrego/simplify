@@ -62,8 +62,6 @@ class DecoderRNN_Attn(nn.Module):
         tgt_batch = tgt_batch.transpose(1,0) # [T,B]
         ### initialize dec_hidden (with enc_final)
         rnn_hidden = self.init_state(enc_final) #([L,B,H], [L,B,H]) or [L,B,H]
-        print("rnn_hidden={}".format(rnn_hidden[0].shape))
-        sys.exit()
         ### initialize attn_hidden (Eq 5 in Luong) used for input-feeding
         attn_hidden = self.tt.FloatTensor(1, self.B, self.H).fill_(0.0)
         ### initialize coverage vector (Eq 10 in See)
@@ -79,11 +77,10 @@ class DecoderRNN_Attn(nn.Module):
             ### current input/output words
             input_word = self.get_input_word(t, teacher_forcing, tgt_batch, dec_output_words) #[B]
             ### run forward step
-            dec_output, rnn_hidden, attn_hidden, dec_attn, enc_coverage = self.forward_step(input_word, attn_hidden, rnn_hidden, enc_outputs, enc_coverage, len_src_batch)
+            dec_output, rnn_hidden, attn_hidden, enc_coverage = self.forward_step(input_word, attn_hidden, rnn_hidden, enc_outputs, enc_coverage, len_src_batch)
             #dec_output   [B,V]
             #rnn_hidden   ([L,B,H],[L,B,H]) or [L,B,H]
             #attn_hidden  [1,B,H]
-            #dec_attn     [B,1,S]
             #enc_coverage [B,S]
             ### get the 1-best
             dec_outputs[t] = dec_output
@@ -133,7 +130,7 @@ class DecoderRNN_Attn(nn.Module):
             dec_output = dec_output.scatter_add(1, enc_batch_extend_vocab, attn_weights)
 
         attn_hidden = attn_hidden.unsqueeze(0) #[B, H] => [1, B, H] (vector used for input-feeding)
-        return dec_output, rnn_hidden, attn_hidden, align_weights, enc_coverage
+        return dec_output, rnn_hidden, attn_hidden, enc_coverage
 
     def init_state(self, encoder_hidden):
         if encoder_hidden is None: return None
