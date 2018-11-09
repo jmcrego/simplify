@@ -63,20 +63,20 @@ class DecoderRNN_Attn(nn.Module):
         rnn_hidden = self.init_state(enc_final) #([L,B,H], [L,B,H]) or [L,B,H]
         ### initialize attn_hidden (Eq 5 in Luong) used for input-feeding
         attn_hidden = torch.zeros(1, self.B, self.H) #[1, B, H]
-        if self.cuda: attn_hidden.cuda()
+        if self.cuda: attn_hidden = attn_hidden.cuda()
         ### initialize coverage vector (Eq 10 in See)
         enc_coverage =  None
         if self.coverage:
             enc_coverage = torch.zeros([self.B, self.S], dtype=torch.float32) #[B, S]
-            if self.cuda: enc_coverage.cuda()
+            if self.cuda: enc_coverage = enc_coverage.cuda()
         ###
         ### loop
         ###
         ### these are the output vectors that will be filled at the end of the loop
         dec_output_words = torch.zeros([self.T-1, self.B], dtype=torch.int64) #[T-1, B]
-        if self.cuda: dec_output_words.cuda()
+        if self.cuda: dec_output_words = dec_output_words.cuda()
         dec_outputs = torch.zeros([self.T-1, self.B, self.V], dtype=torch.float32) #[T-1, B, V]
-        if self.cuda: dec_outputs.cuda()
+        if self.cuda: dec_outputs = dec_outputs.cuda()
         for t in range(self.T-1): #loop to produce target words step by step
             ### current input/output words
             input_word = self.get_input_word(t, teacher_forcing, tgt_batch, dec_output_words) #[B]
