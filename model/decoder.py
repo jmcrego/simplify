@@ -68,16 +68,21 @@ class DecoderRNN_Attn(nn.Module):
         ### initialize coverage vector (Eq 10 in See)
         enc_coverage =  None
         if self.coverage:
-            enc_coverage = torch.zeros([self.B, self.S], dtype=torch.float32) #[B, S]
-            if self.cuda: enc_coverage = enc_coverage.cuda()
+#            enc_coverage = torch.zeros([self.B, self.S], dtype=torch.float32) #[B, S]
+#            if self.cuda: enc_coverage = enc_coverage.cuda()
+            enc_coverage = self.tt.FloatTensor(self.B, self.S)
         ###
         ### loop
         ###
         ### these are the output vectors that will be filled at the end of the loop
-        dec_output_words = torch.zeros([self.T-1, self.B], dtype=torch.int64) #[T-1, B]
-        if self.cuda: dec_output_words = dec_output_words.cuda()
-        dec_outputs = torch.zeros([self.T-1, self.B, self.V], dtype=torch.float32) #[T-1, B, V]
-        if self.cuda: dec_outputs = dec_outputs.cuda()
+#        dec_output_words = torch.zeros([self.T-1, self.B], dtype=torch.int64) #[T-1, B]
+#        if self.cuda: dec_output_words = dec_output_words.cuda()
+        dec_output_words = self.tt.LongIntTensor(self.T-1, self.B)
+
+#        dec_outputs = torch.zeros([self.T-1, self.B, self.V], dtype=torch.float32) #[T-1, B, V]
+#        if self.cuda: dec_outputs = dec_outputs.cuda()
+        dec_outputs = self.tt.FloatTensor(self.T-1, self.B, self.V)
+
         for t in range(self.T-1): #loop to produce target words step by step
             ### current input/output words
             input_word = self.get_input_word(t, teacher_forcing, tgt_batch, dec_output_words) #[B]
