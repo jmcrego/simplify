@@ -28,9 +28,10 @@ class DecoderRNN_Attn(nn.Module):
         self.D = 2 if cfg.bidirectional else 1 ### num of directions
         self.H = cfg.hidden_size 
         self.cuda = cfg.cuda
-        self.tt = torch.cuda if self.cuda else torch        
         self.pointer = cfg.pointer
         self.coverage = cfg.coverage
+
+        self.tt = torch.cuda if self.cuda else torch        
         ### dropout layer to apply on top of the embedding layer
         self.dropout = nn.Dropout(cfg.par.dropout)
         ### set up the RNN
@@ -96,7 +97,7 @@ class DecoderRNN_Attn(nn.Module):
         # enc_outputs [S,B,H] 
         # enc_coverage [B,S]
         ### get the embedding of the current input word (is the previous target word)
-        input_emb = self.embedding(torch.tensor(input_word)) #[B, E]
+        input_emb = self.embedding(self.tt.tensor(input_word)) #[B, E]
         input_emb = self.dropout(input_emb) #[B, E]
         input_emb = input_emb.unsqueeze(0) # [1, B, E]
         ### input feeding: input_emb + attn_hidden
