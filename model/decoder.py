@@ -176,6 +176,8 @@ class DecoderRNN_Attn(nn.Module):
         # enc_coverage [B,S]
         ### get the embedding of the current input word (is the previous target word)
         input_emb = self.embedding(torch.tensor(input_word)) #[B, E]
+        print(input_emb)
+        print(attn_hidden)
         input_emb = self.dropout(input_emb) #[B, E]
         input_emb = input_emb.unsqueeze(0) # [1, B, E]
         ### input feeding: input_emb + attn_hidden
