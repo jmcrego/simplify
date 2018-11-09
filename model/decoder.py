@@ -28,7 +28,7 @@ class DecoderRNN_Attn(nn.Module):
         self.D = 2 if cfg.bidirectional else 1 ### num of directions
         self.H = cfg.hidden_size 
         self.cuda = cfg.cuda
-#        self.tt = torch.cuda if self.cuda else torch        
+        self.tt = torch.cuda if self.cuda else torch        
         self.pointer = cfg.pointer
         self.coverage = cfg.coverage
         ### dropout layer to apply on top of the embedding layer
@@ -62,8 +62,9 @@ class DecoderRNN_Attn(nn.Module):
         ### initialize dec_hidden (with enc_final)
         rnn_hidden = self.init_state(enc_final) #([L,B,H], [L,B,H]) or [L,B,H]
         ### initialize attn_hidden (Eq 5 in Luong) used for input-feeding
-        attn_hidden = torch.zeros(1, self.B, self.H) #[1, B, H]
-        if self.cuda: attn_hidden = attn_hidden.cuda()
+#        attn_hidden = torch.zeros(1, self.B, self.H) #[1, B, H]
+#        if self.cuda: attn_hidden = attn_hidden.cuda()
+        self.tt.FloatTensor(1, self.B, self.H).fill_(0)
         ### initialize coverage vector (Eq 10 in See)
         enc_coverage =  None
         if self.coverage:
