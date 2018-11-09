@@ -66,13 +66,13 @@ class DecoderRNN_Attn(nn.Module):
         ### initialize coverage vector (Eq 10 in See)
         enc_coverage =  None
         if self.coverage:
-            enc_coverage = torch.zeros([self.B, self.S], dtype=self.tt.float32) #[B, S]
+            enc_coverage = torch.zeros([self.B, self.S], dtype=torch.float32) #[B, S]
         ###
         ### loop
         ###
         ### these are the output vectors that will be filled at the end of the loop
-        dec_output_words = torch.zeros([self.T-1, self.B], dtype=self.tt.int64) #[T-1, B]
-        dec_outputs = torch.zeros([self.T-1, self.B, self.V], dtype=self.tt.float32) #[T-1, B, V]
+        dec_output_words = torch.zeros([self.T-1, self.B], dtype=torch.int64) #[T-1, B]
+        dec_outputs = torch.zeros([self.T-1, self.B, self.V], dtype=torch.float32) #[T-1, B, V]
         for t in range(self.T-1): #loop to produce target words step by step
             ### current input/output words
             input_word = self.get_input_word(t, teacher_forcing, tgt_batch, dec_output_words) #[B]
