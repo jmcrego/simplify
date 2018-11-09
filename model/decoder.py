@@ -63,7 +63,8 @@ class DecoderRNN_Attn(nn.Module):
         rnn_hidden = self.init_state(enc_final) #([L,B,H], [L,B,H]) or [L,B,H]
         ### initialize attn_hidden (Eq 5 in Luong) used for input-feeding
         attn_hidden = torch.zeros(1, self.B, self.H) #[1, B, H]
-        if self.cuda: attn_hidden.cuda()
+#        if self.cuda: attn_hidden.cuda()
+        attn_hidden.cuda()
         print(attn_hidden)
         sys.exit()
         ### initialize coverage vector (Eq 10 in See)
