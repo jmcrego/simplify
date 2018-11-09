@@ -62,7 +62,7 @@ class DecoderRNN_Attn(nn.Module):
         ### initialize dec_hidden (with enc_final)
         rnn_hidden = self.init_state(enc_final) #([L,B,H], [L,B,H]) or [L,B,H]
         ### initialize attn_hidden (Eq 5 in Luong) used for input-feeding
-        attn_hidden = self.tt.zeros(1, self.B, self.H) #[1, B, H]
+        attn_hidden = torch.zeros(1, self.B, self.H) #[1, B, H]
         ### initialize coverage vector (Eq 10 in See)
         enc_coverage =  None
         if self.coverage:
