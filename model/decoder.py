@@ -76,7 +76,7 @@ class DecoderRNN_Attn(nn.Module):
         dec_output_words = torch.zeros([self.T-1, self.B], dtype=torch.int64) #[T-1, B]
         if self.cuda: dec_output_words.cuda()
         dec_outputs = torch.zeros([self.T-1, self.B, self.V], dtype=torch.float32) #[T-1, B, V]
-        if self.cuda: dec_output.cuda()
+        if self.cuda: dec_outputs.cuda()
         for t in range(self.T-1): #loop to produce target words step by step
             ### current input/output words
             input_word = self.get_input_word(t, teacher_forcing, tgt_batch, dec_output_words) #[B]
