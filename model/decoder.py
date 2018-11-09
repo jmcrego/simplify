@@ -80,6 +80,8 @@ class DecoderRNN_Attn(nn.Module):
         for t in range(self.T-1): #loop to produce target words step by step
             ### current input/output words
             input_word = self.get_input_word(t, teacher_forcing, tgt_batch, dec_output_words) #[B]
+            print(input_word)
+            sys.exit()
             ### run forward step
             dec_output, rnn_hidden, attn_hidden, dec_attn, enc_coverage = self.forward_step(input_word, attn_hidden, rnn_hidden, enc_outputs, len_src_batch, enc_coverage)
             #dec_output   [B,V]
@@ -92,80 +94,6 @@ class DecoderRNN_Attn(nn.Module):
             dec_output_words[t] = self.get_one_best(dec_output) #[B]
 
         return dec_outputs, dec_output_words
-
-    def beam_search(self, cfg, len_src_batch, max_tgt_len, enc_final, enc_outputs, teacher_forcing):
-        # len_src_batch [B]
-        # enc_final ([L*D,B,H/D], [L*D,B,H/D]) or [L*D,B,H/D]
-        # enc_outputs [S,B,H]
-        self.S = enc_outputs.shape[0] #source seq_size
-        self.B = enc_outputs.shape[1] #batch_size
-        self.T = max_tgt_len
-
-        ### initialize dec_hidden (with enc_final)
-        rnn_hidden = self.init_state(enc_final) #([L,B,H], [L,B,H]) or [L,B,H]
-        ### initialize attn_hidden (Eq 5 in Luong) used for input-feeding
-        attn_hidden = torch.zeros(1, self.B, self.H) #[1, B, H]
-        ### initialize coverage vector (Eq 10 in See)
-        enc_coverage =  None
-        if self.coverage:
-            enc_coverage = torch.zeros([self.B, self.S], dtype=torch.float32) #[B, S]
-
-
-        beams = [Beam(self.b, self.n, cuda=self.cuda) for _ in range(self.B)] #one beam per sentence in batch
-        for t in range(self.T):
-            if all(beam.done() for beam in beams): break #all beam finished in batches
-
-            input_word = torch.stack([beam.get_current_state() for beam in beams]) # inp [B,b]            
-            input_word = inp.t().contiguous().view(1, -1) #[b,B] => [1,b*B]
-
-            # Run one step over the [b*B] input words
-            dec_output, rnn_hidden, attn_hidden, align_weights, enc_coverage = self.forward_step(input_word, attn_hidden, rnn_hidden, enc_outputs, len_src_batch, enc_coverage)
-
-
-
-
-            # Turn any copied words to UNKs. 0 is unk
-            if self.copy_attn:
-                inp = inp.masked_fill(inp.gt(len(self.fields["tgt"].vocab) - 1), 0)
-
-            # Temporary kludge solution to handle changed dim expectation in the decoder
-            inp = inp.unsqueeze(2)
-
-            # Run one step.
-            dec_out, attn = DecoderRNN_Attn(inp, memory_bank, memory_lengths=memory_lengths, step=i)
-
-            dec_out = dec_out.squeeze(0)
-            # dec_out: beam x rnn_size
-
-            # (b) Compute a vector of batch x beam word scores.
-            if not self.copy_attn:
-                out = self.model.generator.forward(dec_out).data
-                out = unbottle(out)
-                # beam x tgt_vocab
-                beam_attn = unbottle(attn["std"])
-            else:
-                out = self.model.generator.forward(dec_out, attn["copy"].squeeze(0), src_map)
-                # beam x (tgt_vocab + extra_vocab)
-                out = data.collapse_copy_scores(unbottle(out.data), batch, self.fields["tgt"].vocab, data.src_vocabs)
-                # beam x tgt_vocab
-                out = out.log()
-                beam_attn = unbottle(attn["copy"])
-
-            # (c) Advance each beam.
-            select_indices_array = []
-            for j, b in enumerate(beam):
-                b.advance(out[:, j], beam_attn.data[:, j, :memory_lengths[j]])
-                select_indices_array.append(b.get_current_origin() * batch_size + j)
-            select_indices = torch.cat(select_indices_array).view(batch_size, beam_size).transpose(0, 1).contiguous().view(-1)
-            self.model.decoder.map_state(lambda state, dim: state.index_select(dim, select_indices))
-
-        # (4) Extract sentences from beam.
-        ret = self._from_beam(beam)
-        ret["gold_score"] = [0] * batch_size
-        if "tgt" in batch.__dict__: ret["gold_score"] = self._run_target(batch, data)
-        ret["batch"] = batch
-
-        return ret
 
 
     def forward_step(self, input_word, attn_hidden, rnn_hidden, enc_outputs, len_src_batch, enc_coverage):
@@ -247,4 +175,77 @@ class DecoderRNN_Attn(nn.Module):
         return input_word
 
 
+    def beam_search(self, cfg, len_src_batch, max_tgt_len, enc_final, enc_outputs, teacher_forcing):
+        # len_src_batch [B]
+        # enc_final ([L*D,B,H/D], [L*D,B,H/D]) or [L*D,B,H/D]
+        # enc_outputs [S,B,H]
+        self.S = enc_outputs.shape[0] #source seq_size
+        self.B = enc_outputs.shape[1] #batch_size
+        self.T = max_tgt_len
+
+        ### initialize dec_hidden (with enc_final)
+        rnn_hidden = self.init_state(enc_final) #([L,B,H], [L,B,H]) or [L,B,H]
+        ### initialize attn_hidden (Eq 5 in Luong) used for input-feeding
+        attn_hidden = torch.zeros(1, self.B, self.H) #[1, B, H]
+        ### initialize coverage vector (Eq 10 in See)
+        enc_coverage =  None
+        if self.coverage:
+            enc_coverage = torch.zeros([self.B, self.S], dtype=torch.float32) #[B, S]
+
+
+        beams = [Beam(self.b, self.n, cuda=self.cuda) for _ in range(self.B)] #one beam per sentence in batch
+        for t in range(self.T):
+            if all(beam.done() for beam in beams): break #all beam finished in batches
+
+            input_word = torch.stack([beam.get_current_state() for beam in beams]) # inp [B,b]            
+            input_word = inp.t().contiguous().view(1, -1) #[b,B] => [1,b*B]
+
+            # Run one step over the [b*B] input words
+            dec_output, rnn_hidden, attn_hidden, align_weights, enc_coverage = self.forward_step(input_word, attn_hidden, rnn_hidden, enc_outputs, len_src_batch, enc_coverage)
+
+
+
+
+            # Turn any copied words to UNKs. 0 is unk
+            if self.copy_attn:
+                inp = inp.masked_fill(inp.gt(len(self.fields["tgt"].vocab) - 1), 0)
+
+            # Temporary kludge solution to handle changed dim expectation in the decoder
+            inp = inp.unsqueeze(2)
+
+            # Run one step.
+            dec_out, attn = DecoderRNN_Attn(inp, memory_bank, memory_lengths=memory_lengths, step=i)
+
+            dec_out = dec_out.squeeze(0)
+            # dec_out: beam x rnn_size
+
+            # (b) Compute a vector of batch x beam word scores.
+            if not self.copy_attn:
+                out = self.model.generator.forward(dec_out).data
+                out = unbottle(out)
+                # beam x tgt_vocab
+                beam_attn = unbottle(attn["std"])
+            else:
+                out = self.model.generator.forward(dec_out, attn["copy"].squeeze(0), src_map)
+                # beam x (tgt_vocab + extra_vocab)
+                out = data.collapse_copy_scores(unbottle(out.data), batch, self.fields["tgt"].vocab, data.src_vocabs)
+                # beam x tgt_vocab
+                out = out.log()
+                beam_attn = unbottle(attn["copy"])
+
+            # (c) Advance each beam.
+            select_indices_array = []
+            for j, b in enumerate(beam):
+                b.advance(out[:, j], beam_attn.data[:, j, :memory_lengths[j]])
+                select_indices_array.append(b.get_current_origin() * batch_size + j)
+            select_indices = torch.cat(select_indices_array).view(batch_size, beam_size).transpose(0, 1).contiguous().view(-1)
+            self.model.decoder.map_state(lambda state, dim: state.index_select(dim, select_indices))
+
+        # (4) Extract sentences from beam.
+        ret = self._from_beam(beam)
+        ret["gold_score"] = [0] * batch_size
+        if "tgt" in batch.__dict__: ret["gold_score"] = self._run_target(batch, data)
+        ret["batch"] = batch
+
+        return ret
 
